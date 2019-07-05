@@ -9,9 +9,6 @@ library(RSA)
 library(psych)
 library(ggplot2)
 
-# set working directory
-setwd("C:/Users/Maria/Desktop/learn/0_PhD/Projects/vascular_depression_trajectories") 
-
 # load data from wave 2 
 df  <- read.table("data/elsa/raw/tab/wave_2_core_data_v4.tab", sep = "\t", header = T)
 
