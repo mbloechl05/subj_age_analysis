@@ -4,53 +4,59 @@
 # ==============================================================
 
 # load packages 
+library(dplyr)
 library(lavaan)
+library(qpcR)
 library(RSA)
 library(psych)
 library(ggplot2)
 
 # load data from wave 2 
-df  <- read.table("data/elsa/raw/tab/wave_2_core_data_v4.tab", sep = "\t", header = T)
+df.raw  <- read.table("data/elsa/raw/tab/wave_2_core_data_v4.tab", sep = "\t", 
+                      header = T)
 
 # select relevant variables
-df <- df[,c("idauniq", "scold", "dhager", "sclifea", "sclifeb", "sclifec", 
-               "sclifed", "sclifee")]
+df.full <- df.raw[,c("idauniq", "DhSex", "scold", "dhager", "sclifea", "sclifeb", 
+                     "sclifec", "sclifed", "sclifee")]
 
 
 #-------------------
 # Data preparation
 #-------------------
 
-# recode values for missing data (-9, -1) as NA
-df <- df %>% mutate_all(funs(na_if(., -9)))
-df <- df %>% mutate_all(funs(na_if(., -1)))
+# 1. Rename ageing variables
+df.full$sa <- df.full$scold # subjective age
+df.full$ca <- df.full$dhager # real age
+
+
+# 2. Replace missing values with NAs
+
+# recode values for missing data (-9, -1) in whole dataset as NA
+df.full <- df.full %>% mutate_all(funs(na_if(., -9)))
+df.full <- df.full %>% mutate_all(funs(na_if(., -1)))
+
+# recode old age values (99) as missing
+df.full$ca[df.full$ca == 99] <- NA
+
+# 3. Recode sex variable
+df.full$sex[df.full$DhSex == 2] <- "female"
+df.full$sex[df.full$DhSex == 1] <- "male"
+
+# 3. Prepare outcome variable life satisfaction
 
 # recode life satisfaction (ls) items so that higher values indicate higher ls
-df$sclifea_r <- 8-df$sclifea
-df$sclifeb_r <- 8-df$sclifeb
-df$sclifec_r <- 8-df$sclifec
-df$sclifed_r <- 8-df$sclifed
-df$sclifee_r <- 8-df$sclifee
+df.full$sclifea_r <- 8-df.full$sclifea
+df.full$sclifeb_r <- 8-df.full$sclifeb
+df.full$sclifec_r <- 8-df.full$sclifec
+df.full$sclifed_r <- 8-df.full$sclifed
+df.full$sclifee_r <- 8-df.full$sclifee
 
 # calculate mean score on life satistfaction scale
-df$ls <- rowMeans(df[,c("sclifea_r",  "sclifeb_r",  "sclifec_r", "sclifed_r", 
-                       "sclifee_r")], na.rm = T)
+df.full$ls <- rowMeans(df.full[,c("sclifea_r",  "sclifeb_r",  "sclifec_r", 
+                                  "sclifed_r", "sclifee_r")], na.rm = T)
 
-# subjective age: 
-df$sa <- df$scold
-
-# real age: 
-df$ca <- df$dhager
-
-# remove participants that are too old and have been coded as age = 99
-df <- df[!(df$ca==99),]
-
-# remove people with missing data
-df <- na.omit(df)
-
-
-# Descriptive stats
-describe(df[,c("sa", "ca", "ls")])
+# 4. Exclude cases with missing data
+df <- na.omit(df.full)
 
 
 # standardise predictors
@@ -66,8 +72,41 @@ df$sa.s2 <- df$sa.s^2
 df$ca.s2 <- df$ca.s^2
 df$sa.ca <- df$sa.s*df$ca.s
 
+
+# ------------------------
+# Descriptive statistics
+# ------------------------
+
+# 1. Descriptive stats before excluding missing data
+
+# Continuous variables
+describe(df.full[,c("ls", "sa", "ca")])
+
+# Categorical variables
+table(df.full$sex)
+prop.table(table(df.full$sex))
+
+
+# 2. Descriptive stats after excluding missing data
+
+# Continuous variables
+describe(df[,c("sa", "ca", "ls")])
+
+# Categorical variables
+table(df$sex)
+prop.table(table(df$sex))
+
+
+# 3. Zero-order correlation matrix
+cor(df[,c("DhSex", "sa", "ca", "ls")])
+
+
+# 3. Cronbachs alpha life satisfaction scale
+alpha(df[,c("sclifea_r", "sclifeb_r", "sclifec_r", "sclifed_r", "sclifee_r")])
+
+
 # -------------------------------------
-# 2.) Fit polynomial regression models
+# Fit polynomial regression models
 # -------------------------------------
 
 # 2.0) Null model 
@@ -94,7 +133,7 @@ fu.model <- "
 ls ~ 1 + 1 + b1*sa.s + b2*ca.s + + b3*sa.s2 + b4*sa.ca + b5*ca.s2"
 
 fu.fit <- sem(fu.model, data=df)
-summary(fu.fit)
+summary(fu.fit, fit.measures = T)
 
 
 # 2.2) Hypothesised models
