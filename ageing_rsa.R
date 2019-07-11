@@ -316,7 +316,7 @@ aic.results <- aic.results[order(aic.results$AIC),]
 aic.results <- add_rownames(aic.results, var = "rowname")
 
 # Plot result
-ggplot(data = aic.results, aes(x = rowname1, y = AIC)) +
+ggplot(data = aic.results, aes(x = rowname, y = AIC)) +
   geom_bar(stat = "identity", fill = "plum") +
   scale_x_discrete(limits=c("som.fit", "fu.fit", "om.fit", "s6.fit", "s4.fit", 
                             "pb.fit", "s5.fit", "s2.fit", "s3.fit", "nu.fit",
@@ -324,7 +324,9 @@ ggplot(data = aic.results, aes(x = rowname1, y = AIC)) +
 #  scale_y_reverse() +
 #  scale_y_continuous(limits = c(23500, 24200)) +
   coord_cartesian(ylim = c(23500, 24200))+
-  theme_classic()
+  theme(axis.text  = element_text(colour = "black", size = 20), 
+        axis.title = element_text(colour = "black", size = 23), 
+        legend.position = "none") 
 
 
 # Plot results for 3 models
@@ -376,6 +378,7 @@ ggplot(data = aic.results, aes(x = rowname1, y = weights)) +
 
 # refit model using RSA function
 r.fu  <- RSA(ls  ~ sa.s*ca.s, df, model = "full")
+summary(r.fu)
 
 # Plot models and save in directory
 
@@ -392,3 +395,5 @@ plot(r.fu,
      pal = colorRampPalette(c("#4c3633", "#795a70","#8f86a6",
                               "#a3b5c1", "#c8dcd2", "#EEF4F1"))(15))
 dev.off()
+
+
