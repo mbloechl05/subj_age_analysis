@@ -102,7 +102,7 @@ cor(df[,c("DhSex", "sa", "ca", "ls")])
 
 
 # 3. Cronbachs alpha life satisfaction scale
-alpha(df[,c("sclifea_r", "sclifeb_r", "sclifec_r", "sclifed_r", "sclifee_r")])
+psych::alpha(df[,c("sclifea_r", "sclifeb_r", "sclifec_r", "sclifed_r", "sclifee_r")])
 
 
 # -------------------------------------
@@ -331,10 +331,10 @@ ggplot(data = aic.results, aes(x = rowname, y = AIC)) +
 
 # Plot results for 3 models
 aic.results.hyp <- aic.results %>% filter(
-  rowname1 == "som.fit" | rowname1 == "om.fit" |rowname1 == "pb.fit"
+  rowname1 == "som.fit" | rowname == "om.fit" |rowname1 == "pb.fit"
 )
 
-ggplot(data = aic.results.hyp, aes(x = rowname1, y = AIC)) +
+ggplot(data = aic.results.hyp, aes(x = rowname, y = AIC)) +
   geom_bar(stat = "identity", fill = c("#183442", "#91A5AE","#A6A3AA"), color = "black") +
   scale_x_discrete(limits = c("som.fit", "om.fit", "pb.fit"), 
                    labels = c("Shifting optimal \n margin model", 
@@ -361,7 +361,7 @@ aic.results$weights <- weights$weights
 
 
 # Plot result
-ggplot(data = aic.results, aes(x = rowname1, y = weights)) +
+ggplot(data = aic.results, aes(x = rowname, y = weights)) +
   geom_bar(stat = "identity", fill = "plum") +
   scale_x_discrete(limits=c("som.fit", "fu.fit", "om.fit", "s6.fit", "s4.fit", 
                             "pb.fit", "s5.fit", "s2.fit", "s3.fit", "nu.fit",
@@ -376,13 +376,38 @@ ggplot(data = aic.results, aes(x = rowname1, y = weights)) +
 # Plot RSA result full model
 # -----------------------------
 
-# refit model using RSA function
+# Re-fit full model using RSA function
 r.fu  <- RSA(ls  ~ sa.s*ca.s, df, model = "full")
 summary(r.fu)
 
+# Examine how many points lay below and above first principal axis
+
+## First plot PA1, LOC and dots with quadrants
+plot(df$ca.s ~ jitter(df$sa.s, 3), pch = 16, xlab = "Subjective age", 
+     ylab = "Chronological age", col = rgb(0,0,0, alpha = 0.3))
+abline(a = 2.649, b = 1.170, col = "mediumvioletred", lwd = 3)
+abline(a = 0, b = 1, col = "green4", lwd = 3)
+abline(v = 0, lty = "dotted", lwd = 3)
+abline(h = 0, lty = "dotted", lwd = 3)
+
+## Now calculate how many values are below and above the PA1
+fpa.ca.fit <- 2.649 + 1.170 * df$sa.s
+resi <- df$ca.s - fpa.ca.fit
+
+sum(resi < 0)
+sum(resi > 0)
+
+## Chack also how many values are below and above the LOC
+loc.ca.fit <- 0 + 1 * df$sa.s
+resi <- df$ca.s - loc.ca.fit
+
+sum(resi < 0)
+sum(resi > 0)
+
 # Plot models and save in directory
 
-png("model.png", width = 6, height = 6, units = 'in', res = 600)
+png("C:/Users/Maria/Desktop/learn/0_PhD/Projects/ageing_rsa/analysis/results/model.png", 
+    width = 6, height = 6, units = 'in', res = 600)
 plot(r.fu, 
      axes = c("LOC", "LOIC", "PA1"),
      axesStyles = list(LOC  = list(lty = "solid", lwd = 2, col = "black"),
@@ -390,7 +415,7 @@ plot(r.fu,
                        PA1  = list(lty = "dashed", lwd = 2, col = "grey40")),
      xlab = "Subjective age", ylab = "Actual age", zlab ="Life satisfaction",
      cex.main = 1.3, cex.tickLabel = 1.25, cex.axesLabel = 1.25,
-     points = list(show=FALSE), hull = F, legend = F,
+     points = list(show=FALSE), hull = T, legend = F,
      project = c("LOC", "LOIC", "PA1", "contour"), param = F,
      pal = colorRampPalette(c("#4c3633", "#795a70","#8f86a6",
                               "#a3b5c1", "#c8dcd2", "#EEF4F1"))(15))
