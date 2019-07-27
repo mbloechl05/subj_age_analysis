@@ -10,10 +10,10 @@ library(qpcR)
 library(RSA)
 library(psych)
 library(ggplot2)
-# source frm function
+
 source("frm.R")
 
-# load data from wave 2 
+# load data  
 df.raw  <- read.table("data/elsa/raw/tab/wave_2_core_data_v4.tab", sep = "\t", 
                       header = T)
 
@@ -26,73 +26,73 @@ df.full <- df.raw[,c("idauniq", "DhSex", "scold", "dhager", "sclifea", "sclifeb"
 # Data preparation
 #-------------------
 
-# 1. Rename ageing variables
+# 1.) Rename ageing variables
 df.full$sa <- df.full$scold # subjective age
 df.full$ca <- df.full$dhager # real age
 
 
-# 2. Replace missing values with NAs
+# 2.) Replace missing values with NAs
 
-# Recode values for missing data (-9, -1) in whole dataset as NA
+### Recode values for missing data (-9, -1) in whole dataset as NA
 df.full <- df.full %>% mutate_all(funs(na_if(., -9)))
 df.full <- df.full %>% mutate_all(funs(na_if(., -1)))
 
-# Recode old age values (99) as missing
+### Recode old age values (99) as missing
 df.full$ca[df.full$ca == 99] <- NA
 
 
-# 3. Recode sex variable
+# 3.) Recode sex variable
 df.full$sex[df.full$DhSex == 2] <- "female"
 df.full$sex[df.full$DhSex == 1] <- "male"
 
 
-# 4. Prepare outcome variable life satisfaction
+# 4.) Prepare outcome variable life satisfaction
 
-# Recode life satisfaction (ls) items so that higher values indicate higher ls
+### Recode life satisfaction (ls) items so that higher values indicate higher ls
 df.full$sclifea_r <- 8-df.full$sclifea
 df.full$sclifeb_r <- 8-df.full$sclifeb
 df.full$sclifec_r <- 8-df.full$sclifec
 df.full$sclifed_r <- 8-df.full$sclifed
 df.full$sclifee_r <- 8-df.full$sclifee
 
-# Calculate mean score on life satistfaction scale
+### Calculate mean score on life satistfaction scale
 df.full$ls <- rowMeans(df.full[,c("sclifea_r",  "sclifeb_r",  "sclifec_r", 
                                   "sclifed_r", "sclifee_r")], na.rm = T)
 
 
-# 5. Remove outliers chronological age
+# 5.) Remove outliers chronological age
 
-# Calculate +/- 3 SD
+### Calculate +/- 3 SD
 out <- 3*sd(df.full$ca, na.rm = T)
 
-# How many outliers
+### How many outliers
 sum(df.full$ca < mean(df.full$ca, na.rm = T) - out, na.rm = T) # -3 SD
 sum(df.full$ca > mean(df.full$ca, na.rm = T) + out, na.rm = T) # +3 SD
 
-# Mark people with chronological age +/- 3 SD as missing
+### Mark people with chronological age +/- 3 SD as missing
 df.full$ca[df.full$ca > mean(df.full$ca, na.rm = T) + out | 
              df.full$ca < mean(df.full$ca, na.rm = T) - out] <- NA
 
 
-# 6. Remove outliers subjective age
+# 6.) Remove outliers subjective age
 
-# Calculate +/- 3 SD
+### Calculate +/- 3 SD
 out <- 3*sd(df.full$sa, na.rm = T)
 
-# How many outliers 
+### How many outliers 
 sum(df.full$sa < mean(df.full$sa, na.rm = T) - out, na.rm = T) # - 3 SD
 sum(df.full$sa > mean(df.full$sa, na.rm = T) + out, na.rm = T) # + 3 SD
 
-# Mark people with chronological age +/- 3 SD as missing
+### Mark people with chronological age +/- 3 SD as missing
 df.full$sa[df.full$sa > mean(df.full$sa, na.rm = T) + out | 
              df.full$sa < mean(df.full$sa, na.rm = T) - out] <- NA
 
 
-# 7. Exclude cases with missing data
+# 7.) Exclude cases with missing data
 df <- na.omit(df.full)
 
 
-# 8. Standardise predictors
+# 8.) Standardise predictors
 grandmean <- mean(c(df$sa, df$ca), na.rm = T)
 pooledsd  <- sqrt(((sd(df$sa)^2)+(sd(df$ca)^2))/2)
 
@@ -100,7 +100,7 @@ df$sa.s  <- (df$sa-grandmean)/pooledsd
 df$ca.s  <- (df$ca-grandmean)/pooledsd
 
 
-# 9. Add squared and interaction terms of the predictors
+# 9.) Add squared and interaction terms of the predictors
 df$sa.s2 <- df$sa.s^2
 df$ca.s2 <- df$ca.s^2
 df$sa.ca <- df$sa.s*df$ca.s
@@ -140,16 +140,17 @@ psych::alpha(df[,c("sclifea_r", "sclifeb_r", "sclifec_r", "sclifed_r",
                    "sclifee_r")])
 
 
-# -------------------------------------
-# Fit polynomial regression models
-# -------------------------------------
 
-# 2.0) Null model 
+# ------------------------------------------
+# Specify all polynomial regression models
+# ------------------------------------------
+
+
+# 0.) Null model 
 # ------------------
 
 nu.model <- "
 ls ~ 1 + b1*sa.s + b2*ca.s + b3*sa.s2 + b4*sa.ca + b5*ca.s2 
-
 # parameter constraints
 b1 == 0
 b2 == 0
@@ -157,28 +158,12 @@ b3 == 0
 b4 == 0
 b5 == 0"
 
-nu.fit <- sem(nu.model, data = df, se = "robust", estimator = "MLR")
-summary(nu.fit)
 
-
-# 2.1) Full model
-# -------------------
-
-fu.model <- "
-ls ~ 1 + 1 + b1*sa.s + b2*ca.s + b3*sa.s2 + b4*sa.ca + b5*ca.s2"
-
-fu.fit <- sem(fu.model, data = df, se = "robust", estimator = "MLR")
-summary(fu.fit, fit.measures = T)
-
-
-# 2.2) Hypothesised models
-# ----------------------------
-
-# Model 1: Positivity bias
+# 1.) Positivity bias model
+# ---------------------------
 
 pb.model <- "
-ls ~ 1 + 1 + b1*sa.s + b2*ca.s + b3*sa.s2 + b4*sa.ca + b5*ca.s2 
-
+ls ~ 1 + b1*sa.s + b2*ca.s + b3*sa.s2 + b4*sa.ca + b5*ca.s2 
 # parameter constraints
 b1 <  0
 b2 == 0
@@ -186,44 +171,38 @@ b3 == 0
 b4 == 0
 b5 == 0"
 
-pb.fit <- sem(pb.model, data = df, se = "robust", estimator = "MLR")
-summary(pb.fit)
 
+# 2.) Optimal margin models
+# ---------------------------
 
-# Model 2: Optimal margin
+# 2.1.) Optimal margin flat ridge
 
-### a: Optimal margin flat ridge
 omfr.model <- "
-ls ~ 1 + 1 + b1*sa.s + b2*ca.s + b3*sa.s2 + b4*sa.ca + b5*ca.s2 
-
+ls ~ 1 + b1*sa.s + b2*ca.s + b3*sa.s2 + b4*sa.ca + b5*ca.s2 
 # parameter constraints
 b1 == -b2
-b3 < 0
+b3 <  0
 b3 == b5
 b3 + b4 + b5 == 0"
 
-omfr.fit <- sem(omfr.model, data = df, se = "robust", estimator = "MLR")
-summary(omfr.fit)
 
+# 2.2.) Optimal margin rising ridge
 
-### b: Optimal margin rising ridge
 omrr.model <- "
 ls ~ 1 + b1*sa.s + b2*ca.s + b3*sa.s2 + b4*sa.ca + b5*ca.s2
-
 # parameter constraints
 b3 == b5
 b3 + b4 + b5 == 0"
 
-omrr.fit <- sem(omrr.model, data = df, se = "robust", estimator = "MLR")
-summary(omrr.fit)
+
+# 3.) Shifting optimal margin models
+# ------------------------------------
 
 
+# 3.1.) Shifting optimal margin flat ridge
 
-# Model 3: Shifting optimal margin
+### Flat ridge down
 
-### a: Shifting optimal margin flat ridge
-
-### down
 somfr_down.model <- "
 ls ~ 1 + b1*sa.s + b2*ca.s + b3*sa.s2 + b4*sa.ca + b5*ca.s2
 # parameter constraints
@@ -232,50 +211,48 @@ b3 < -0.000001
 b5 < -0.000001
 b4^2 == 4*b5*b3"
 
-somfr_down.fit <- sem(somfr_down.model, se = "robust", data = df, 
-                      estimator = "MLR")
-summary(somfr_down.fit)
 
-### up
+### Flat ridge up
+
 somfr_up.model <- "
 ls ~ 1 + b1*sa.s + b2*ca.s + b3*sa.s2 + b4*sa.ca + b5*ca.s2
-
 # parameter constraints
 b1 == (b2*b4)/2*b5
 b3 > 0.000001
 b5 > 0.000001
 b4^2 == 4*b5*b3"
 
-somfr_up.fit <- sem(somfr_up.model, se = "robust", data = df, estimator = "MLR")
-summary(somfr_up.fit)
 
+# 3.2.) Shifting optimal margin rising ridge
 
-### a: rising ridge
+### Rising ridge down
 
-### down
 somrr_down.model <- "
 ls ~ 1 + b1*sa.s + b2*ca.s + b3*sa.s2 + b4*sa.ca + b5*ca.s2 
-
 # parameter constraints
 b3 < -0.000001
 b5 < -0.000001
 b4^2 == 4*b3*b5"
 
-somrr_down.fit <- sem(somrr_down.model, data = df, se = "robust", 
-                      estimator = "MLR")
-summary(somrr_down.fit)
 
-### up
+### Rising ridge up
+
 somrr_up.model <- "
 ls ~ 1 + b1*sa.s + b2*ca.s + b3*sa.s2 + b4*sa.ca + b5*ca.s2 
-
 # parameter constraints
 b3 > 0.000001
 b5 > 0.000001
 b4^2 == 4*b3*b5"
 
-somrr_up.fit <- sem(somrr_up.model, data = df, se = "robust", estimator = "MLR")
-summary(somrr_up.fit)
+
+# 4.) Full model
+# -------------------
+
+fu.model <- "
+ls ~ 1 + 1 + b1*sa.s + b2*ca.s + b3*sa.s2 + b4*sa.ca + b5*ca.s2"
+
+fu.fit <- sem(fu.model, data = df, se = "robust", estimator = "MLR")
+summary(fu.fit, fit.measures = T)
 
 
 
@@ -287,15 +264,12 @@ summary(somrr_up.fit)
 
 s1.model <- "
 ls ~ 1 + b1*sa.s + b2*ca.s + + b3*sa.s2 + b4*sa.ca + b5*ca.s2 
-
 # parameter constraints
 b1 == 0
 b2 <  0
 b3 == 0
 b4 == 0 
 b5 == 0"
-
-s1.fit <- sem(s1.model, data = df, se = "robust", estimator = "MLR")
 
 
 # Model S2: Chronological age model II
@@ -303,7 +277,6 @@ s1.fit <- sem(s1.model, data = df, se = "robust", estimator = "MLR")
 
 s2.model <- "
 ls ~ 1 + b1*sa.s + b2*ca.s + + b3*sa.s2 + b4*sa.ca + b5*ca.s2 
-
 # parameter constraints
 b1 == 0
 b2 >  0
@@ -311,22 +284,17 @@ b3 == 0
 b4 == 0 
 b5 == 0"
 
-s2.fit <- sem(s2.model, data = df, se = "robust", estimator = "MLR")
-
 
 # Model S3: Curvelinear chronological age model
 # first positive effect of age that decreases in older adults
 
 s3.model <- "
 ls ~ 1 + b1*sa.s + b2*ca.s + + b3*sa.s2 + b4*sa.ca + b5*ca.s2 
-
 # parameter constraints
 b1 == 0
 b3 == 0
 b4 == 0
 b5 <  0"
-
-s3.fit <- sem(s3.model, data = df, se = "robust", estimator = "MLR")
 
 
 # Model S4: Curvelinear subjective age model
@@ -334,14 +302,11 @@ s3.fit <- sem(s3.model, data = df, se = "robust", estimator = "MLR")
 
 s4.model <- "
 ls ~ 1 + b1*sa.s + b2*ca.s + + b3*sa.s2 + b4*sa.ca + b5*ca.s2 
-
 # parameter constraints
 b2 == 0
 b3 <  0
 b4 == 0
 b5 == 0"
-
-s4.fit <- sem(s4.model, data = df, se = "robust", estimator = "MLR")
 
 
 # Model S5: Main effects model I
@@ -349,15 +314,12 @@ s4.fit <- sem(s4.model, data = df, se = "robust", estimator = "MLR")
 
 s5.model <- "
 ls ~ 1 + b1*sa.s + b2*ca.s + + b3*sa.s2 + b4*sa.ca + b5*ca.s2 
-
 # parameter constraints
 b1 <  0
 b2 <  0
 b3 == 0
 b4 == 0
 b5 == 0"
-
-s5.fit <- sem(s5.model, data = df, se = "robust", estimator = "MLR")
 
 
 # Model S6: Main effects model II
@@ -373,15 +335,12 @@ b3 == 0
 b4 == 0
 b5 == 0"
 
-s6.fit <- sem(s6.model, data = df, se = "robust", estimator = "MLR")
-
 
 # Model S7: Congruency model
 # positive effect of correct self-evaluation
 
 s7.model <- "
 ls ~ 1 + b1*sa.s + b2*ca.s + + b3*sa.s2 + b4*sa.ca + b5*ca.s2 
-
 # parameter constraints
 b1 == 0
 b2 == b1
@@ -389,7 +348,57 @@ b3 <  0
 b4 == -2*b3
 b5 == b3"
 
+
+
+############################
+############################
+############################
+
+
+# 2.3.) Fit all models
+
+
+nu.fit <- sem(nu.model, data = df, se = "robust", estimator = "MLR")
+summary(nu.fit, fit.measures = T)
+
+pb.fit <- sem(pb.model, data = df, se = "robust", estimator = "MLR")
+summary(pb.fit)
+
+omfr.fit <- sem(omfr.model, data = df, se = "robust", estimator = "MLR")
+summary(omfr.fit)
+
+
+omrr.fit <- sem(omrr.model, data = df, se = "robust", estimator = "MLR")
+summary(omrr.fit)
+
+somfr_down.fit <- sem(somfr_down.model, se = "robust", data = df, 
+                      estimator = "MLR")
+summary(somfr_down.fit)
+
+somfr_up.fit <- sem(somfr_up.model, se = "robust", data = df, estimator = "MLR")
+summary(somfr_up.fit)
+
+somrr_down.fit <- sem(somrr_down.model, data = df, se = "robust", 
+                      estimator = "MLR")
+summary(somrr_down.fit)
+
+
+somrr_up.fit <- sem(somrr_up.model, data = df, se = "robust", estimator = "MLR")
+summary(somrr_up.fit)
+
+s1.fit <- sem(s1.model, data = df, se = "robust", estimator = "MLR")
+s2.fit <- sem(s2.model, data = df, se = "robust", estimator = "MLR")
+s3.fit <- sem(s3.model, data = df, se = "robust", estimator = "MLR")
+s4.fit <- sem(s4.model, data = df, se = "robust", estimator = "MLR")
+s5.fit <- sem(s5.model, data = df, se = "robust", estimator = "MLR")
+s6.fit <- sem(s6.model, data = df, se = "robust", estimator = "MLR")
 s7.fit <- sem(s7.model, data = df, se = "robust", estimator = "MLR")
+
+############################
+############################
+############################
+
+
 
 
 # 2.3.) Model comparisons
@@ -606,13 +615,13 @@ nu.fit <- sem(nu.model, data = df, se = "robust", estimator = "MLR")
 fu.fit <- sem(fu.model, data = df, se = "robust", estimator = "MLR")
 pb.fit <- sem(pb.model, data = df, se = "robust", estimator = "MLR")
 om.fit <- sem(om.model, data = df, se = "robust", estimator = "MLR")
-s1.fit <- sem(om.model, data = df, se = "robust", estimator = "MLR")
-s2.fit <- sem(om.model, data = df, se = "robust", estimator = "MLR")
-s3.fit <- sem(om.model, data = df, se = "robust", estimator = "MLR")
-s4.fit <- sem(om.model, data = df, se = "robust", estimator = "MLR")
-s5.fit <- sem(om.model, data = df, se = "robust", estimator = "MLR")
-s6.fit <- sem(om.model, data = df, se = "robust", estimator = "MLR")
-s7.fit <- sem(om.model, data = df, se = "robust", estimator = "MLR")
+# s1.fit <- sem(om.model, data = df, se = "robust", estimator = "MLR")
+# s2.fit <- sem(om.model, data = df, se = "robust", estimator = "MLR")
+# s3.fit <- sem(om.model, data = df, se = "robust", estimator = "MLR")
+# s4.fit <- sem(om.model, data = df, se = "robust", estimator = "MLR")
+# s5.fit <- sem(om.model, data = df, se = "robust", estimator = "MLR")
+# s6.fit <- sem(om.model, data = df, se = "robust", estimator = "MLR")
+# s7.fit <- sem(om.model, data = df, se = "robust", estimator = "MLR")
 
 # Get AICs of all models in the full model set
 aic.results <- 
@@ -635,68 +644,68 @@ aic.results$weights <- weights$weights
 
 
 
-# --------------------------------------------------
-# Re-run analyses with full sample (pre-registered)
-# --------------------------------------------------
-
-### 
-### CHECK AGAIN IF THIS IS RIGHT!! 
-###
-
-# Re-name full data frame to df
-df <- df.full
-
-# mark people with age < 40 y as missing
-df$ca[df$ca < 40] <- NA
-
-# 3. Exclude cases with missing data (i.e. outliers)
-df <- na.omit(df)
-
-# Get descriptive stats after exclusion
-describe(df$ca)
-describe(df$sa)
-
-# Standardise predictors again
-grandmean <- mean(c(df$sa, df$ca), na.rm = T)
-pooledsd  <- sqrt(((sd(df$sa)^2)+(sd(df$ca)^2))/2)
-
-df$sa.s  <- (df$sa-grandmean)/pooledsd
-df$ca.s  <- (df$ca-grandmean)/pooledsd
-
-# Add squared and interaction terms of the predictors again
-df$sa.s2 <- df$sa.s^2
-df$ca.s2 <- df$ca.s^2
-df$sa.ca <- df$sa.s*df$ca.s
-
-# Refit models
-nu.fit <- sem(nu.model, data = df, se = "robust", estimator = "MLR")
-fu.fit <- sem(fu.model, data = df, se = "robust", estimator = "MLR")
-pb.fit <- sem(pb.model, data = df, se = "robust", estimator = "MLR")
-om.fit <- sem(om.model, data = df, se = "robust", estimator = "MLR")
-s1.fit <- sem(om.model, data = df, se = "robust", estimator = "MLR")
-s2.fit <- sem(om.model, data = df, se = "robust", estimator = "MLR")
-s3.fit <- sem(om.model, data = df, se = "robust", estimator = "MLR")
-s4.fit <- sem(om.model, data = df, se = "robust", estimator = "MLR")
-s5.fit <- sem(om.model, data = df, se = "robust", estimator = "MLR")
-s6.fit <- sem(om.model, data = df, se = "robust", estimator = "MLR")
-s7.fit <- sem(om.model, data = df, se = "robust", estimator = "MLR")
-
-# Get AICs of all models in the full model set
-aic.results <- 
-  AIC(nu.fit, fu.fit, 
-      pb.fit, om.fit, som.fit, 
-      s1.fit, s2.fit, s3.fit, s4.fit, s5.fit, s6.fit, s7.fit)
-
-# Order results according to AIC (models with low AIC first)
-aic.results <- aic.results[order(aic.results$AIC),]
-
-# Add rownames as column to data frame
-aic.results <- add_rownames(aic.results, var = "rowname")
-
-# Make a vector from AICs 
-aics.vector <- pull(aic.results, AIC)
-
-# Calculate Akaike weights and attach to results of model comparisons
-weights <- akaike.weights(aics.vector)
-aic.results$weights <- weights$weights
+# # --------------------------------------------------
+# # Re-run analyses with full sample (pre-registered)
+# # --------------------------------------------------
+# 
+# ### 
+# ### CHECK AGAIN IF THIS IS RIGHT!! 
+# ###
+# 
+# # Re-name full data frame to df
+# df <- df.full
+# 
+# # mark people with age < 40 y as missing
+# df$ca[df$ca < 40] <- NA
+# 
+# # 3. Exclude cases with missing data (i.e. outliers)
+# df <- na.omit(df)
+# 
+# # Get descriptive stats after exclusion
+# describe(df$ca)
+# describe(df$sa)
+# 
+# # Standardise predictors again
+# grandmean <- mean(c(df$sa, df$ca), na.rm = T)
+# pooledsd  <- sqrt(((sd(df$sa)^2)+(sd(df$ca)^2))/2)
+# 
+# df$sa.s  <- (df$sa-grandmean)/pooledsd
+# df$ca.s  <- (df$ca-grandmean)/pooledsd
+# 
+# # Add squared and interaction terms of the predictors again
+# df$sa.s2 <- df$sa.s^2
+# df$ca.s2 <- df$ca.s^2
+# df$sa.ca <- df$sa.s*df$ca.s
+# 
+# # Refit models
+# nu.fit <- sem(nu.model, data = df, se = "robust", estimator = "MLR")
+# fu.fit <- sem(fu.model, data = df, se = "robust", estimator = "MLR")
+# pb.fit <- sem(pb.model, data = df, se = "robust", estimator = "MLR")
+# om.fit <- sem(om.model, data = df, se = "robust", estimator = "MLR")
+# s1.fit <- sem(om.model, data = df, se = "robust", estimator = "MLR")
+# s2.fit <- sem(om.model, data = df, se = "robust", estimator = "MLR")
+# s3.fit <- sem(om.model, data = df, se = "robust", estimator = "MLR")
+# s4.fit <- sem(om.model, data = df, se = "robust", estimator = "MLR")
+# s5.fit <- sem(om.model, data = df, se = "robust", estimator = "MLR")
+# s6.fit <- sem(om.model, data = df, se = "robust", estimator = "MLR")
+# s7.fit <- sem(om.model, data = df, se = "robust", estimator = "MLR")
+# 
+# # Get AICs of all models in the full model set
+# aic.results <- 
+#   AIC(nu.fit, fu.fit, 
+#       pb.fit, om.fit, som.fit, 
+#       s1.fit, s2.fit, s3.fit, s4.fit, s5.fit, s6.fit, s7.fit)
+# 
+# # Order results according to AIC (models with low AIC first)
+# aic.results <- aic.results[order(aic.results$AIC),]
+# 
+# # Add rownames as column to data frame
+# aic.results <- add_rownames(aic.results, var = "rowname")
+# 
+# # Make a vector from AICs 
+# aics.vector <- pull(aic.results, AIC)
+# 
+# # Calculate Akaike weights and attach to results of model comparisons
+# weights <- akaike.weights(aics.vector)
+# aic.results$weights <- weights$weights
 
