@@ -1,5 +1,5 @@
 # ===============================================================
-# Analysis for 
+# Main analysis for 
 # "Psychological benefits of subjective age bias" 
 # ==============================================================
 
@@ -10,8 +10,9 @@ library(qpcR)
 library(RSA)
 library(psych)
 library(ggplot2)
+library(car) # for vif()
 
-source("frm.R")
+source("C:/Users/Maria/Desktop/learn/0_PhD/Projects/ageing_rsa/analysis/subj_age_analysis/frm.R")
 
 # load data  
 df.raw  <- read.table("data/elsa/raw/tab/wave_2_core_data_v4.tab", sep = "\t", 
@@ -140,6 +141,11 @@ psych::alpha(df[,c("sclifea_r", "sclifeb_r", "sclifec_r", "sclifed_r",
                    "sclifee_r")])
 
 
+# 5.) Check for multicollinearity
+lm <- lm(ls ~ sa.s + ca.s + sa.s2 + sa.ca + ca.s2, data = df)
+vif(lm)
+
+
 
 # ------------------------------------------
 # Specify all polynomial regression models
@@ -147,7 +153,7 @@ psych::alpha(df[,c("sclifea_r", "sclifeb_r", "sclifec_r", "sclifed_r",
 
 
 # 0.) Null model 
-# ------------------
+# ---------------------
 
 nu.model <- "
 ls ~ 1 + b1*sa.s + b2*ca.s + b3*sa.s2 + b4*sa.ca + b5*ca.s2 
@@ -160,7 +166,7 @@ b5 == 0"
 
 
 # 1.) Positivity bias model
-# ---------------------------
+# --------------------------------
 
 pb.model <- "
 ls ~ 1 + b1*sa.s + b2*ca.s + b3*sa.s2 + b4*sa.ca + b5*ca.s2 
@@ -173,7 +179,7 @@ b5 == 0"
 
 
 # 2.) Optimal margin models
-# ---------------------------
+# --------------------------------
 
 # 2.1.) Optimal margin flat ridge
 
@@ -198,12 +204,11 @@ b3 + b4 + b5 == 0"
 # 3.) Shifting optimal margin models
 # ------------------------------------
 
-
 # 3.1.) Shifting optimal margin flat ridge
 
 ### Flat ridge down
 
-somfr_down.model <- "
+somfr_d.model <- "
 ls ~ 1 + b1*sa.s + b2*ca.s + b3*sa.s2 + b4*sa.ca + b5*ca.s2
 # parameter constraints
 b1 == (b2*b4)/2*b5
@@ -214,7 +219,7 @@ b4^2 == 4*b5*b3"
 
 ### Flat ridge up
 
-somfr_up.model <- "
+somfr_u.model <- "
 ls ~ 1 + b1*sa.s + b2*ca.s + b3*sa.s2 + b4*sa.ca + b5*ca.s2
 # parameter constraints
 b1 == (b2*b4)/2*b5
@@ -227,7 +232,7 @@ b4^2 == 4*b5*b3"
 
 ### Rising ridge down
 
-somrr_down.model <- "
+somrr_d.model <- "
 ls ~ 1 + b1*sa.s + b2*ca.s + b3*sa.s2 + b4*sa.ca + b5*ca.s2 
 # parameter constraints
 b3 < -0.000001
@@ -237,7 +242,7 @@ b4^2 == 4*b3*b5"
 
 ### Rising ridge up
 
-somrr_up.model <- "
+somrr_u.model <- "
 ls ~ 1 + b1*sa.s + b2*ca.s + b3*sa.s2 + b4*sa.ca + b5*ca.s2 
 # parameter constraints
 b3 > 0.000001
@@ -251,13 +256,10 @@ b4^2 == 4*b3*b5"
 fu.model <- "
 ls ~ 1 + 1 + b1*sa.s + b2*ca.s + b3*sa.s2 + b4*sa.ca + b5*ca.s2"
 
-fu.fit <- sem(fu.model, data = df, se = "robust", estimator = "MLR")
-summary(fu.fit, fit.measures = T)
 
 
-
-# 2.2.4.) Supplementary models
-# -------------------------------
+# 5.) Supplementary models
+# ----------------------------
 
 # Model S1: Chronological age model I
 # negative effect of chronological age
@@ -349,42 +351,24 @@ b4 == -2*b3
 b5 == b3"
 
 
+# -------------
+# Fit models
+# -------------
 
-############################
-############################
-############################
+# Fit main models
 
-
-# 2.3.) Fit all models
-
-
-nu.fit <- sem(nu.model, data = df, se = "robust", estimator = "MLR")
-summary(nu.fit, fit.measures = T)
-
-pb.fit <- sem(pb.model, data = df, se = "robust", estimator = "MLR")
-summary(pb.fit)
-
-omfr.fit <- sem(omfr.model, data = df, se = "robust", estimator = "MLR")
-summary(omfr.fit)
+nu.fit      <- sem(nu.model,      data = df, se = "robust", estimator = "MLR")
+pb.fit      <- sem(pb.model,      data = df, se = "robust", estimator = "MLR")
+omfr.fit    <- sem(omfr.model,    data = df, se = "robust", estimator = "MLR")
+omrr.fit    <- sem(omrr.model,    data = df, se = "robust", estimator = "MLR")
+somfr_d.fit <- sem(somfr_d.model, data = df, se = "robust", estimator = "MLR")
+somfr_u.fit <- sem(somfr_u.model, data = df, se = "robust", estimator = "MLR")
+somrr_d.fit <- sem(somrr_d.model, data = df, se = "robust", estimator = "MLR")
+somrr_u.fit <- sem(somrr_u.model, data = df, se = "robust", estimator = "MLR")
+fu.fit      <- sem(fu.model,      data = df, se = "robust", estimator = "MLR")
 
 
-omrr.fit <- sem(omrr.model, data = df, se = "robust", estimator = "MLR")
-summary(omrr.fit)
-
-somfr_down.fit <- sem(somfr_down.model, se = "robust", data = df, 
-                      estimator = "MLR")
-summary(somfr_down.fit)
-
-somfr_up.fit <- sem(somfr_up.model, se = "robust", data = df, estimator = "MLR")
-summary(somfr_up.fit)
-
-somrr_down.fit <- sem(somrr_down.model, data = df, se = "robust", 
-                      estimator = "MLR")
-summary(somrr_down.fit)
-
-
-somrr_up.fit <- sem(somrr_up.model, data = df, se = "robust", estimator = "MLR")
-summary(somrr_up.fit)
+# Fit supplementary models
 
 s1.fit <- sem(s1.model, data = df, se = "robust", estimator = "MLR")
 s2.fit <- sem(s2.model, data = df, se = "robust", estimator = "MLR")
@@ -394,82 +378,66 @@ s5.fit <- sem(s5.model, data = df, se = "robust", estimator = "MLR")
 s6.fit <- sem(s6.model, data = df, se = "robust", estimator = "MLR")
 s7.fit <- sem(s7.model, data = df, se = "robust", estimator = "MLR")
 
-############################
-############################
-############################
 
-
-
-
-# 2.3.) Model comparisons
-# -------------------------
-
-
-# 2.3.1.) Exclude redundant models from set
-
-### Create list of main models
-main.models <- list(fu.fit, pb.fit, omfr.fit, omrr.fit, somfr_down.fit, 
-                  somrr_down.fit, nu.fit)
-names(main.models) <- c("full", "pb", "omfr", "omrr", "somfr", "somrr", "null")
-
-### Get AICs and other information
-aics.main <- as.data.frame(AICcmodavg::aictab(main.models, 
-                                              modnames = names(main.models), 
-                                              second.ord = F))
-
-### Now, identify models with essentially the same log-likelihood as a simpler 
-### model and print warning if there are any
-frm(aics.main)
-
-
-# 2.3.2.) Model comparisons
-
-### Update Modellist 
-main.models.reduced <- main.models[-c(1)] # without full
-
-aics.main <- as.data.frame(AICcmodavg::aictab(main.models.reduced, 
-                                              modnames = names(main.models.reduced), 
-                                              second.ord = F))
-aics.main
-
-# 2.3.1.) Exclude redundant models from set
+# ----------------------------------
+# Model evaluation and comparisons
+# ----------------------------------
 
 ### Create list of all models
-modellist <- list(fu.fit, pb.fit, omfr.fit, omrr.fit, somfr_down.fit, 
-                  somrr_down.fit, s1.fit, s2.fit, s3.fit, s4.fit, s5.fit, 
-                  s6.fit, s7.fit, nu.fit)
-names(modellist) <- c("full", "pb", "omfr", "omrr", "somfr", "somrr",  "s1", 
-                      "s2", "s3", "s4", "s5", "s6", "s7", "null")
+all.models <- list(fu.fit, 
+                   pb.fit, 
+                   omfr.fit, 
+                   omrr.fit, 
+                   somfr_d.fit, 
+                   somrr_d.fit, 
+                   s1.fit, 
+                   s2.fit, 
+                   s3.fit, 
+                   s4.fit, 
+                   s5.fit,   
+                   s6.fit, 
+                   s7.fit, 
+                   nu.fit)
+
+### Set names of models in list
+names(all.models) <- c("full", "pb", "omfr", "omrr", "somfr", "somrr", "s1", 
+                       "s2", "s3", "s4", "s5", "s6", "s7", "null")
 
 ### Get AICs and other information
-aic.results <- as.data.frame(AICcmodavg::aictab(modellist, 
-                                                modnames = names(modellist), 
-                                                second.ord = F))
+aics <- as.data.frame(AICcmodavg::aictab(all.models, 
+                                         modnames = names(all.models), 
+                                         second.ord = F))
 
 ### Now, identify models with essentially the same log-likelihood as a simpler 
 ### model and print warning if there are any
-frm(aic.results)
+frm(aics)
+### Full model, s1, s3, s5, and s7 are redundant
+
+### Exclude redundant models from list of models
+all.models.r <- all.models[-c(1,  11, 9, 13, 7)]
+
+### Get AICs and other fit information for final model set
+aics <- as.data.frame(AICcmodavg::aictab(all.models.r, 
+                                         modnames = names(all.models.r), 
+                                         second.ord = F))
+aics # print results
 
 
-# 2.3.2.) Model comparisons
+# 3.) Additional results
+# --------------------------
 
-### Update Modellist 
-modellist <- modellist[-c(1,  11, 9, 13, 7)] # without full, s5, s3, s7, s1
+### Get CFI, SRMR, and RMSEA 
 
-aic.results <- as.data.frame(AICcmodavg::aictab(modellist, 
-                                                modnames = names(modellist), 
-                                                second.ord = F))
-aic.results
+fitmeasures(somrr_d.fit, fit.measures = c("CFI", "SRMR", "RMSEA"))
+fitmeasures(omrr.fit, fit.measures = c("CFI", "SRMR", "RMSEA"))
+fitmeasures(omfr.fit, fit.measures = c("CFI", "SRMR", "RMSEA"))
 
-### Get CFIs for all models
-fitmeasures(srrr_down.fit, fit.measures = c("CFI", "SRMR", "RMSEA"))
-fitmeasures(srr.fit, fit.measures = c("CFI", "SRMR", "RMSEA"))
-fitmeasures(om.fit, fit.measures = c("CFI", "SRMR", "RMSEA"))
 
-# 2.3.3.) Statistical models
-anova(fu.fit, srrr_down.fit)
-anova(srrr_down.fit, srr.fit)
-anova(srr.fit, om.fit)
+### Likelihood ratio tests of nested models
+
+anova(fu.fit, somrr_d.fit)
+anova(somrr_d.fit, omrr.fit)
+anova(omrr.fit, omfr.fit)
 
 
 # --------
@@ -519,44 +487,46 @@ ggplot(data = aic.results, aes(x = rowname, y = weights)) +
 # 4.) Plot RSA result full model
 
 # Re-fit full model using RSA function
-r.fu  <- RSA(ls  ~ sa.s*ca.s, df, model = "full")
-summary(r.fu)
+r.fu  <- RSA(ls  ~ sa.s*ca.s, df)
 
 # Plot full model
-
-#png("C:/Users/Maria/Desktop/learn/0_PhD/Projects/ageing_rsa/analysis/results/model.png", 
-#    width = 6, height = 6, units = 'in', res = 600)
-plot(r.fu, type = "contour",
+png("C:/Users/Maria/Desktop/learn/0_PhD/Projects/ageing_rsa/analysis/results/3d.png", 
+    width = 12, height = 12, units = 'in', res = 600)
+# modified seaborne
+plot(r.fu, model = "SRRR",
      axes = c("LOC", "LOIC", "PA1"),
      axesStyles = list(LOC  = list(lty = "solid", lwd = 2, col = "black"),
                        LOIC = list(lty = "solid", lwd = 2, col = "black"),
-                       PA1  = list(lty = "dashed", lwd = 2, col = "grey40")),
+                       PA1  = list(lty = "dotted", lwd = 2, col = "grey40")),
      xlab = "Subjective age", ylab = "Actual age", zlab ="Life satisfaction",
-     cex.main = 1.3, cex.tickLabel = 1.25, cex.axesLabel = 1.25,
-     points = list(show=TRUE, jitter = 0.01), hull = T, legend = F,
-     project = c("LOC", "LOIC", "PA1", "contour"), param = F,
-     pal = colorRampPalette(c("#4c3633", "#795a70","#8f86a6",
-                              "#a3b5c1", "#c8dcd2", "#EEF4F1"))(15))
-#dev.off()
+     cex.tickLabel = 2, cex.axesLabel = 2,
+     points = list(show=F), hull = T, legend = T,
+     project = c("LOC", "LOIC", "PA1"), param = F,
+     pal = colorRampPalette(c("#3e2b31", "#684852","#916572","#D091A4","#DFB1B4",
+                              "#EBD2CB","#f7edea","#f8f0ee", "#FBFFFE"))(15))
+dev.off()
 
-#png("C:/Users/Maria/Desktop/learn/0_PhD/Projects/ageing_rsa/analysis/results/model.png", 
-#    width = 6, height = 6, units = 'in', res = 600)
-plot(r.fu,
-     axes = c("LOC", "LOIC", "PA1"),
-     axesStyles = list(LOC  = list(lty = "solid", lwd = 2, col = "black"),
-                       LOIC = list(lty = "solid", lwd = 2, col = "black"),
-                       PA1  = list(lty = "dashed", lwd = 2, col = "grey40")),
+png("C:/Users/Maria/Desktop/learn/0_PhD/Projects/ageing_rsa/analysis/results/contour.png", 
+    width = 9, height = 9, units = 'in', res = 600)
+plot(r.fu, type = "contour", model = "SRRR",
+     axes = c("LOC", "PA1"),
+     axesStyles = list(LOC  = list(lty = "solid", lwd = 6, col = "black"),
+                       PA1 = list(lty = "solid", lwd = 6, col = "black")),
+                      # LOIC  = list(lty = "solid", lwd = 6, col = "grey40")),
      xlab = "Subjective age", ylab = "Actual age", zlab ="Life satisfaction",
-     cex.main = 1.3, cex.tickLabel = 1.25, cex.axesLabel = 1.25,
-     points = list(show=F), hull = T, legend = F,
-     project = c("LOC", "LOIC", "PA1", "contour"), param = F,
-     pal = colorRampPalette(c("#4c3633", "#795a70","#8f86a6",
-                              "#a3b5c1", "#c8dcd2", "#EEF4F1"))(15))
-#dev.off()
+     cex.main = 1.3, cex.tickLabel = 2, cex.axesLabel = 2,
+     points = list(show=T, jitter = 0.005, color = "black"), hull = T, legend = F,
+     #project = c("LOC", "PA1"), param = F, 
+     pal = colorRampPalette(c("#3e2b31", "#684852","#916572","#D091A4","#DFB1B4",
+                              "#EBD2CB","#f7edea","#f8f0ee", "#FBFFFE"))(15))
+dev.off()
+
+
 
 # ------------------------
 #### Additional double check stuff: 
 # ------------------------------
+
 
 # Examine how many points lay below and above first principal axis
 
@@ -584,128 +554,4 @@ sum(resi > 0)
 
 
 
-# -------------------------------------------------------------
-# Re-un analyses excluding outliers and people aged < 40 years
-# -------------------------------------------------------------
-
-# mark people with age < 40 y as missing
-df$ca[df$ca < 40] <- NA
-
-# 3. Exclude cases with missing data (i.e. outliers)
-df <- na.omit(df)
-
-# Get descriptive stats after exclusion
-describe(df$ca)
-describe(df$sa)
-
-# Standardise predictors again
-grandmean <- mean(c(df$sa, df$ca), na.rm = T)
-pooledsd  <- sqrt(((sd(df$sa)^2)+(sd(df$ca)^2))/2)
-
-df$sa.s  <- (df$sa-grandmean)/pooledsd
-df$ca.s  <- (df$ca-grandmean)/pooledsd
-
-# Add squared and interaction terms of the predictors again
-df$sa.s2 <- df$sa.s^2
-df$ca.s2 <- df$ca.s^2
-df$sa.ca <- df$sa.s*df$ca.s
-
-# Refit models
-nu.fit <- sem(nu.model, data = df, se = "robust", estimator = "MLR")
-fu.fit <- sem(fu.model, data = df, se = "robust", estimator = "MLR")
-pb.fit <- sem(pb.model, data = df, se = "robust", estimator = "MLR")
-om.fit <- sem(om.model, data = df, se = "robust", estimator = "MLR")
-# s1.fit <- sem(om.model, data = df, se = "robust", estimator = "MLR")
-# s2.fit <- sem(om.model, data = df, se = "robust", estimator = "MLR")
-# s3.fit <- sem(om.model, data = df, se = "robust", estimator = "MLR")
-# s4.fit <- sem(om.model, data = df, se = "robust", estimator = "MLR")
-# s5.fit <- sem(om.model, data = df, se = "robust", estimator = "MLR")
-# s6.fit <- sem(om.model, data = df, se = "robust", estimator = "MLR")
-# s7.fit <- sem(om.model, data = df, se = "robust", estimator = "MLR")
-
-# Get AICs of all models in the full model set
-aic.results <- 
-  AIC(nu.fit, fu.fit, 
-      pb.fit, om.fit, som.fit, 
-      s1.fit, s2.fit, s3.fit, s4.fit, s5.fit, s6.fit, s7.fit)
-
-# Order results according to AIC (models with low AIC first)
-aic.results <- aic.results[order(aic.results$AIC),]
-
-# Add rownames as column to data frame
-aic.results <- add_rownames(aic.results, var = "rowname")
-
-# Make a vector from AICs 
-aics.vector <- pull(aic.results, AIC)
-
-# Calculate Akaike weights and attach to results of model comparisons
-weights <- akaike.weights(aics.vector)
-aic.results$weights <- weights$weights
-
-
-
-# # --------------------------------------------------
-# # Re-run analyses with full sample (pre-registered)
-# # --------------------------------------------------
-# 
-# ### 
-# ### CHECK AGAIN IF THIS IS RIGHT!! 
-# ###
-# 
-# # Re-name full data frame to df
-# df <- df.full
-# 
-# # mark people with age < 40 y as missing
-# df$ca[df$ca < 40] <- NA
-# 
-# # 3. Exclude cases with missing data (i.e. outliers)
-# df <- na.omit(df)
-# 
-# # Get descriptive stats after exclusion
-# describe(df$ca)
-# describe(df$sa)
-# 
-# # Standardise predictors again
-# grandmean <- mean(c(df$sa, df$ca), na.rm = T)
-# pooledsd  <- sqrt(((sd(df$sa)^2)+(sd(df$ca)^2))/2)
-# 
-# df$sa.s  <- (df$sa-grandmean)/pooledsd
-# df$ca.s  <- (df$ca-grandmean)/pooledsd
-# 
-# # Add squared and interaction terms of the predictors again
-# df$sa.s2 <- df$sa.s^2
-# df$ca.s2 <- df$ca.s^2
-# df$sa.ca <- df$sa.s*df$ca.s
-# 
-# # Refit models
-# nu.fit <- sem(nu.model, data = df, se = "robust", estimator = "MLR")
-# fu.fit <- sem(fu.model, data = df, se = "robust", estimator = "MLR")
-# pb.fit <- sem(pb.model, data = df, se = "robust", estimator = "MLR")
-# om.fit <- sem(om.model, data = df, se = "robust", estimator = "MLR")
-# s1.fit <- sem(om.model, data = df, se = "robust", estimator = "MLR")
-# s2.fit <- sem(om.model, data = df, se = "robust", estimator = "MLR")
-# s3.fit <- sem(om.model, data = df, se = "robust", estimator = "MLR")
-# s4.fit <- sem(om.model, data = df, se = "robust", estimator = "MLR")
-# s5.fit <- sem(om.model, data = df, se = "robust", estimator = "MLR")
-# s6.fit <- sem(om.model, data = df, se = "robust", estimator = "MLR")
-# s7.fit <- sem(om.model, data = df, se = "robust", estimator = "MLR")
-# 
-# # Get AICs of all models in the full model set
-# aic.results <- 
-#   AIC(nu.fit, fu.fit, 
-#       pb.fit, om.fit, som.fit, 
-#       s1.fit, s2.fit, s3.fit, s4.fit, s5.fit, s6.fit, s7.fit)
-# 
-# # Order results according to AIC (models with low AIC first)
-# aic.results <- aic.results[order(aic.results$AIC),]
-# 
-# # Add rownames as column to data frame
-# aic.results <- add_rownames(aic.results, var = "rowname")
-# 
-# # Make a vector from AICs 
-# aics.vector <- pull(aic.results, AIC)
-# 
-# # Calculate Akaike weights and attach to results of model comparisons
-# weights <- akaike.weights(aics.vector)
-# aic.results$weights <- weights$weights
 
