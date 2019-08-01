@@ -1,5 +1,5 @@
 # ===============================================================
-# Main analysis for 
+# Preproc and main analysis for 
 # "Psychological benefits of subjective age bias" 
 # ==============================================================
 
@@ -137,9 +137,9 @@ cor(df[,c("DhSex", "sa", "ca", "ls")])
 
 
 # 4.) Cronbachs alpha life satisfaction scale
-psych::alpha(df[,c("sclifea_r", "sclifeb_r", "sclifec_r", "sclifed_r", 
-                   "sclifee_r")])
-
+psych::alpha(df
+             [,c("sclifea_r", "sclifeb_r", "sclifec_r", "sclifed_r", "sclifee_r")]
+             )
 
 # 5.) Check for multicollinearity
 lm <- lm(ls ~ sa.s + ca.s + sa.s2 + sa.ca + ca.s2, data = df)
