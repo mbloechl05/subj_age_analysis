@@ -146,222 +146,9 @@ lm <- lm(ls ~ sa.s + ca.s + sa.s2 + sa.ca + ca.s2, data = df)
 vif(lm)
 
 
-
-# ------------------------------------------
-# Specify all polynomial regression models
-# ------------------------------------------
-
-
-# 0.) Null model 
-# ---------------------
-
-nu.model <- "
-ls ~ 1 + b1*sa.s + b2*ca.s + b3*sa.s2 + b4*sa.ca + b5*ca.s2 
-# parameter constraints
-b1 == 0
-b2 == 0
-b3 == 0
-b4 == 0
-b5 == 0"
-
-
-# 1.) Positivity bias model
-# --------------------------------
-
-pb.model <- "
-ls ~ 1 + b1*sa.s + b2*ca.s + b3*sa.s2 + b4*sa.ca + b5*ca.s2 
-# parameter constraints
-b1 <  0
-b2 == 0
-b3 == 0
-b4 == 0
-b5 == 0"
-
-
-# 2.) Optimal margin models
-# --------------------------------
-
-# 2.1.) Optimal margin flat ridge
-
-omfr.model <- "
-ls ~ 1 + b1*sa.s + b2*ca.s + b3*sa.s2 + b4*sa.ca + b5*ca.s2 
-# parameter constraints
-b1 == -b2
-b3 <  0
-b3 == b5
-b3 + b4 + b5 == 0 
-C: = b1/(2*b3)"
-
-
-# 2.2.) Optimal margin rising ridge
-
-omrr.model <- "
-ls ~ 1 + b1*sa.s + b2*ca.s + b3*sa.s2 + b4*sa.ca + b5*ca.s2
-# parameter constraints
-b3 == b5
-b3 + b4 + b5 == 0
-C := (b2-b1)/(4*b3)"
-
-
-# 3.) Shifting optimal margin models
-# ------------------------------------
-
-# 3.1.) Shifting optimal margin flat ridge
-
-### Flat ridge down
-
-somfr_d.model <- "
-ls ~ 1 + b1*sa.s + b2*ca.s + b3*sa.s2 + b4*sa.ca + b5*ca.s2
-# parameter constraints
-b1 == (b2*b4)/2*b5
-b3 < -0.000001
-b5 < -0.000001
-b4^2 == 4*b5*b3"
-
-
-### Flat ridge up
-
-somfr_u.model <- "
-ls ~ 1 + b1*sa.s + b2*ca.s + b3*sa.s2 + b4*sa.ca + b5*ca.s2
-# parameter constraints
-b1 == (b2*b4)/2*b5
-b3 > 0.000001
-b5 > 0.000001
-b4^2 == 4*b5*b3"
-
-
-# 3.2.) Shifting optimal margin rising ridge
-
-### Rising ridge down
-
-somrr_d.model <- "
-ls ~ 1 + b1*sa.s + b2*ca.s + b3*sa.s2 + b4*sa.ca + b5*ca.s2 
-# parameter constraints
-b3 < -0.000001
-b5 < -0.000001
-b4^2 == 4*b3*b5
-C:= -(2*b1*b5 + b2*b4)/(4*b4*b5)
-S:= -b4/(2*b5)
-bM := b1/S + b2"
-
-
-### Rising ridge up
-
-somrr_u.model <- "
-ls ~ 1 + b1*sa.s + b2*ca.s + b3*sa.s2 + b4*sa.ca + b5*ca.s2 
-# parameter constraints
-b3 > 0.000001
-b5 > 0.000001
-b4^2 == 4*b3*b5
-C:= -(2*b1*b5 + b2*b4)/(4*b4*b5)
-S:= -b4/(2*b5)
-bM := b1/S + b2"
-
-
-# 4.) Full model
-# -------------------
-
-fu.model <- "
-ls ~ 1 + b1*sa.s + b2*ca.s + b3*sa.s2 + b4*sa.ca + b5*ca.s2"
-
-
-
-# 5.) Supplementary models
-# ----------------------------
-
-# Model S1: Chronological age model I
-# negative effect of chronological age
-
-s1.model <- "
-ls ~ 1 + b1*sa.s + b2*ca.s + + b3*sa.s2 + b4*sa.ca + b5*ca.s2 
-# parameter constraints
-b1 == 0
-b2 <  0
-b3 == 0
-b4 == 0 
-b5 == 0"
-
-
-# Model S2: Chronological age model II
-# positive effect of chronological age
-
-s2.model <- "
-ls ~ 1 + b1*sa.s + b2*ca.s + + b3*sa.s2 + b4*sa.ca + b5*ca.s2 
-# parameter constraints
-b1 == 0
-b2 >  0
-b3 == 0
-b4 == 0 
-b5 == 0"
-
-
-# Model S3: Curvelinear chronological age model
-# first positive effect of age that decreases in older adults
-
-s3.model <- "
-ls ~ 1 + b1*sa.s + b2*ca.s + + b3*sa.s2 + b4*sa.ca + b5*ca.s2 
-# parameter constraints
-b1 == 0
-b3 == 0
-b4 == 0
-b5 <  0"
-
-
-# Model S4: Curvelinear subjective age model
-# positive effect of mean subjective age 
-
-s4.model <- "
-ls ~ 1 + b1*sa.s + b2*ca.s + + b3*sa.s2 + b4*sa.ca + b5*ca.s2 
-# parameter constraints
-b2 == 0
-b3 <  0
-b4 == 0
-b5 == 0"
-
-
-# Model S5: Main effects model I
-# positive effect younger subj age, and younger chronol age
-
-s5.model <- "
-ls ~ 1 + b1*sa.s + b2*ca.s + + b3*sa.s2 + b4*sa.ca + b5*ca.s2 
-# parameter constraints
-b1 <  0
-b2 <  0
-b3 == 0
-b4 == 0
-b5 == 0"
-
-
-# Model S6: Main effects model II
-# positive effect younger subj age, and older chronol age
-
-s6.model <- "
-ls ~ 1 + b1*sa.s + b2*ca.s + + b3*sa.s2 + b4*sa.ca + b5*ca.s2 
-
-# parameter constraints
-b1 <  0
-b2 >  0
-b3 == 0
-b4 == 0
-b5 == 0"
-
-
-# Model S7: Congruency model
-# positive effect of correct self-evaluation
-
-s7.model <- "
-ls ~ 1 + b1*sa.s + b2*ca.s + + b3*sa.s2 + b4*sa.ca + b5*ca.s2 
-# parameter constraints
-b1 == 0
-b2 == b1
-b3 <  0
-b4 == -2*b3
-b5 == b3"
-
-
-# -------------
-# Fit models
-# -------------
+# ----------------------------------
+# Fit polynomial regression models
+# ----------------------------------
 
 # Fit main models
 
@@ -392,108 +179,117 @@ s7.fit <- sem(s7.model, data = df, se = "robust", estimator = "MLR")
 # ----------------------------------
 
 ### Create list of all models
-all.models <- list(fu.fit, 
-                   pb.fit, 
-                   omfr.fit, 
-                   omrr.fit, 
-                   somfr_d.fit, 
-                   somrr_d.fit, 
-                   s1.fit, 
-                   s2.fit, 
-                   s3.fit, 
-                   s4.fit, 
-                   s5.fit,   
-                   s6.fit, 
-                   s7.fit, 
-                   nu.fit)
+models <- list(fu.fit, 
+               pb.fit, 
+               omfr.fit, 
+               omrr.fit, 
+               somfr_d.fit, 
+               somrr_d.fit, 
+               s1.fit, 
+               s2.fit, 
+               s3.fit, 
+               s4.fit, 
+               s5.fit,   
+               s6.fit, 
+               s7.fit, 
+               nu.fit)
 
 ### Set names of models in list
-names(all.models) <- c("full", "pb", "omfr", "omrr", "somfr", "somrr", "s1", 
-                       "s2", "s3", "s4", "s5", "s6", "s7", "null")
+names(models) <- c("full", 
+                   "pb", 
+                   "omfr", 
+                   "omrr", 
+                   "somfr", 
+                   "somrr", 
+                   "s1", 
+                   "s2", 
+                   "s3", 
+                   "s4", 
+                   "s5", 
+                   "s6", 
+                   "s7", 
+                   "null")
 
 ### Get AICs and other information
-aics <- as.data.frame(AICcmodavg::aictab(all.models, 
-                                         modnames = names(all.models), 
-                                         second.ord = F))
+aics <- as.data.frame(
+  AICcmodavg::aictab(models, modnames = names(models), second.ord = F)
+  )
 
 ### Now, identify models with essentially the same log-likelihood as a simpler 
 ### model and print warning if there are any
 frm(aics)
-### Full model, s1, s3, s5, and s7 are redundant
 
-### Exclude redundant models from list of models
-all.models.r <- all.models[-c(1,  11, 9, 13, 7)]
+
+### Full model, s1, s3, s5, and s7 are redundant --> exclude from list of models
+models_r <- models[-c(1,  11, 9, 13, 7)]
 
 ### Get AICs and other fit information for final model set
-aics <- as.data.frame(AICcmodavg::aictab(all.models.r, 
-                                         modnames = names(all.models.r), 
-                                         second.ord = F))
-aics # print results
+aics <- as.data.frame(
+  AICcmodavg::aictab(models_r, modnames = names(models_r), second.ord = F)
+  )
 
+aics 
 
-# 3.) Additional results
-# --------------------------
 
 ### Get parameters full model and SOMRR model
 summary(somrr_d.fit, ci = T)
 summary(fu.fit, ci = T)
 
 ### Get CFI, SRMR, and RMSEA 
-
 fitmeasures(somrr_d.fit, fit.measures = c("CFI", "SRMR", "RMSEA"))
 fitmeasures(omrr.fit, fit.measures = c("CFI", "SRMR", "RMSEA"))
 fitmeasures(omfr.fit, fit.measures = c("CFI", "SRMR", "RMSEA"))
 
 
 ### Likelihood ratio tests of nested models
-
 anova(fu.fit, somrr_d.fit)
 anova(somrr_d.fit, omrr.fit)
 anova(omrr.fit, omfr.fit)
+
 
 
 # --------
 # Plots 
 # --------
 
-# 1.) Plot AIC results all models
-ggplot(data = aic.results, aes(x = rowname, y = AIC)) +
-  geom_bar(stat = "identity", fill = "plum") +
-  scale_x_discrete(limits=c("som.fit", "fu.fit", "om.fit", "s6.fit", "s4.fit", 
-                            "pb.fit", "s5.fit", "s2.fit", "s3.fit", "nu.fit",
-                            "s7.fit", "s1.fit")) +
-  coord_cartesian(ylim = c(23500, 24200))+
-  theme(axis.text  = element_text(colour = "black", size = 20), 
-        axis.title = element_text(colour = "black", size = 23), 
-        legend.position = "none") 
-
-
-# 2.) Plot AIC results for 3 models
-aic.results.hyp <- aic.results %>% filter(
-  rowname1 == "som.fit" | rowname == "om.fit" |rowname1 == "pb.fit"
-)
-
-ggplot(data = aic.results.hyp, aes(x = rowname, y = AIC)) +
-  geom_bar(stat = "identity", fill = c("#183442", "#91A5AE","#A6A3AA"), color = "black") +
-  scale_x_discrete(limits = c("som.fit", "om.fit", "pb.fit"), 
-                   labels = c("Shifting optimal \n margin model", 
-                              "Optimal margin \n model", 
-                              "Positivity bias \n model")) +
-  coord_cartesian(ylim = c(23800, 24100))+
-  theme_classic(base_size = 20) +
-  labs(x = "", y = "Akaike's Information Criterion") +
-  theme(axis.text  = element_text(colour = "black", size = 20), 
-        axis.title = element_text(colour = "black", size = 23), 
-        legend.position = "none") 
-
-
-# 3.) Plot Akaike weight result
-ggplot(data = aic.results, aes(x = rowname, y = weights)) +
-  geom_bar(stat = "identity", fill = "plum") +
-  scale_x_discrete(limits=c("som.fit", "fu.fit", "om.fit", "s6.fit", "s4.fit", 
-                            "pb.fit", "s5.fit", "s2.fit", "s3.fit", "nu.fit",
-                            "s7.fit", "s1.fit")) +
-  theme_classic()
+# # 1.) Plot AIC results all models
+# ggplot(data = aic.results, aes(x = rowname, y = AIC)) +
+#   geom_bar(stat = "identity", fill = "plum") +
+#   scale_x_discrete(limits=c("som.fit", "fu.fit", "om.fit", "s6.fit", "s4.fit", 
+#                             "pb.fit", "s5.fit", "s2.fit", "s3.fit", "nu.fit",
+#                             "s7.fit", "s1.fit")) +
+#   coord_cartesian(ylim = c(23500, 24200))+
+#   theme(axis.text  = element_text(colour = "black", size = 20), 
+#         axis.title = element_text(colour = "black", size = 23), 
+#         legend.position = "none") 
+# 
+# 
+# # 2.) Plot AIC results for 3 models
+# aic.results.hyp <- aic.results %>% filter(
+#   rowname1 == "som.fit" | rowname == "om.fit" |rowname1 == "pb.fit"
+# )
+# 
+# ggplot(data = aic.results.hyp, aes(x = rowname, y = AIC)) +
+#   geom_bar(stat = "identity", fill = c("#183442", "#91A5AE","#A6A3AA"), color = "black") +
+#   scale_x_discrete(limits = c("som.fit", "om.fit", "pb.fit"), 
+#                    labels = c("Shifting optimal \n margin model", 
+#                               "Optimal margin \n model", 
+#                               "Positivity bias \n model")) +
+#   coord_cartesian(ylim = c(23800, 24100))+
+#   theme_classic(base_size = 20) +
+#   labs(x = "", y = "Akaike's Information Criterion") +
+#   theme(axis.text  = element_text(colour = "black", size = 20), 
+#         axis.title = element_text(colour = "black", size = 23), 
+#         legend.position = "none") 
+# 
+# 
+# # 3.) Plot Akaike weight result
+# ggplot(data = aic.results, aes(x = rowname, y = weights)) +
+#   geom_bar(stat = "identity", fill = "plum") +
+#   scale_x_discrete(limits=c("som.fit", "fu.fit", "om.fit", "s6.fit", "s4.fit", 
+#                             "pb.fit", "s5.fit", "s2.fit", "s3.fit", "nu.fit",
+#                             "s7.fit", "s1.fit")) +
+#   theme_classic()
 
 
 # 4.) Plot RSA result full model
@@ -535,34 +331,34 @@ dev.off()
 
 
 
-# ------------------------
-#### Additional double check stuff: 
-# ------------------------------
-
-
-# Examine how many points lay below and above first principal axis
-
-## First plot PA1, LOC and dots with quadrants
-plot(df$ca.s ~ jitter(df$sa.s, 3), pch = 16, xlab = "Subjective age", 
-     ylab = "Chronological age", col = rgb(0,0,0, alpha = 0.3))
-abline(a = 2.649, b = 1.170, col = "mediumvioletred", lwd = 3)
-abline(a = 0, b = 1, col = "green4", lwd = 3)
-abline(v = 0, lty = "dotted", lwd = 3)
-abline(h = 0, lty = "dotted", lwd = 3)
-
-## Now calculate how many values are below and above the PA1
-fpa.ca.fit <- 2.649 + 1.170 * df$sa.s
-resi <- df$ca.s - fpa.ca.fit
-
-sum(resi < 0)
-sum(resi > 0)
-
-## Chack also how many values are below and above the LOC
-loc.ca.fit <- 0 + 1 * df$sa.s
-resi <- df$ca.s - loc.ca.fit
-
-sum(resi < 0)
-sum(resi > 0)
+# # ------------------------
+# #### Additional double check stuff: 
+# # ------------------------------
+# 
+# 
+# # Examine how many points lay below and above first principal axis
+# 
+# ## First plot PA1, LOC and dots with quadrants
+# plot(df$ca.s ~ jitter(df$sa.s, 3), pch = 16, xlab = "Subjective age", 
+#      ylab = "Chronological age", col = rgb(0,0,0, alpha = 0.3))
+# abline(a = 2.649, b = 1.170, col = "mediumvioletred", lwd = 3)
+# abline(a = 0, b = 1, col = "green4", lwd = 3)
+# abline(v = 0, lty = "dotted", lwd = 3)
+# abline(h = 0, lty = "dotted", lwd = 3)
+# 
+# ## Now calculate how many values are below and above the PA1
+# fpa.ca.fit <- 2.649 + 1.170 * df$sa.s
+# resi <- df$ca.s - fpa.ca.fit
+# 
+# sum(resi < 0)
+# sum(resi > 0)
+# 
+# ## Chack also how many values are below and above the LOC
+# loc.ca.fit <- 0 + 1 * df$sa.s
+# resi <- df$ca.s - loc.ca.fit
+# 
+# sum(resi < 0)
+# sum(resi > 0)
 
 
 
