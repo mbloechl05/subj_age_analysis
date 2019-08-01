@@ -189,7 +189,8 @@ ls ~ 1 + b1*sa.s + b2*ca.s + b3*sa.s2 + b4*sa.ca + b5*ca.s2
 b1 == -b2
 b3 <  0
 b3 == b5
-b3 + b4 + b5 == 0"
+b3 + b4 + b5 == 0 
+C: = b1/(2*b3)"
 
 
 # 2.2.) Optimal margin rising ridge
@@ -198,7 +199,8 @@ omrr.model <- "
 ls ~ 1 + b1*sa.s + b2*ca.s + b3*sa.s2 + b4*sa.ca + b5*ca.s2
 # parameter constraints
 b3 == b5
-b3 + b4 + b5 == 0"
+b3 + b4 + b5 == 0
+C := (b2-b1)/(4*b3)"
 
 
 # 3.) Shifting optimal margin models
@@ -237,7 +239,10 @@ ls ~ 1 + b1*sa.s + b2*ca.s + b3*sa.s2 + b4*sa.ca + b5*ca.s2
 # parameter constraints
 b3 < -0.000001
 b5 < -0.000001
-b4^2 == 4*b3*b5"
+b4^2 == 4*b3*b5
+C:= -(2*b1*b5 + b2*b4)/(4*b4*b5)
+S:= -b4/(2*b5)
+bM := b1/S + b2"
 
 
 ### Rising ridge up
@@ -247,14 +252,17 @@ ls ~ 1 + b1*sa.s + b2*ca.s + b3*sa.s2 + b4*sa.ca + b5*ca.s2
 # parameter constraints
 b3 > 0.000001
 b5 > 0.000001
-b4^2 == 4*b3*b5"
+b4^2 == 4*b3*b5
+C:= -(2*b1*b5 + b2*b4)/(4*b4*b5)
+S:= -b4/(2*b5)
+bM := b1/S + b2"
 
 
 # 4.) Full model
 # -------------------
 
 fu.model <- "
-ls ~ 1 + 1 + b1*sa.s + b2*ca.s + b3*sa.s2 + b4*sa.ca + b5*ca.s2"
+ls ~ 1 + b1*sa.s + b2*ca.s + b3*sa.s2 + b4*sa.ca + b5*ca.s2"
 
 
 
@@ -425,6 +433,10 @@ aics # print results
 
 # 3.) Additional results
 # --------------------------
+
+### Get parameters full model and SOMRR model
+summary(somrr_d.fit, ci = T)
+summary(fu.fit, ci = T)
 
 ### Get CFI, SRMR, and RMSEA 
 

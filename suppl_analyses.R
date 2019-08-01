@@ -306,26 +306,26 @@ df.full.2$sa.ca <- df.full.2$sa.s*df.full.2$ca.s
 
 # Fit main models
 
-nu.fit      <- sem(nu.model,      data = df.full.2, se = "robust", missing = "FIML", fixed.x = F)
-pb.fit      <- sem(pb.model,      data = df.full.2, se = "robust", missing = "FIML", fixed.x = F)
-omfr.fit    <- sem(omfr.model,    data = df.full.2, se = "robust", missing = "FIML", fixed.x = F)
-omrr.fit    <- sem(omrr.model,    data = df.full.2, se = "robust", missing = "FIML", fixed.x = F)
-somfr_d.fit <- sem(somfr_d.model, data = df.full.2, se = "robust", missing = "FIML", fixed.x = F)
-somfr_u.fit <- sem(somfr_u.model, data = df.full.2, se = "robust", missing = "FIML", fixed.x = F)
-somrr_d.fit <- sem(somrr_d.model, data = df.full.2, se = "robust", missing = "FIML", fixed.x = F)
-somrr_u.fit <- sem(somrr_u.model, data = df.full.2, se = "robust", missing = "FIML", fixed.x = F)
-fu.fit      <- sem(fu.model,      data = df.full.2, se = "robust", missing = "FIML", fixed.x = F)
+nu.fit      <- sem(nu.model,      data = df.full.2, se = "robust", missing = "FIML", fixed.x = T)
+pb.fit      <- sem(pb.model,      data = df.full.2, se = "robust", missing = "FIML", fixed.x = T)
+omfr.fit    <- sem(omfr.model,    data = df.full.2, se = "robust", missing = "FIML", fixed.x = T)
+omrr.fit    <- sem(omrr.model,    data = df.full.2, se = "robust", missing = "FIML", fixed.x = T)
+somfr_d.fit <- sem(somfr_d.model, data = df.full.2, se = "robust", missing = "FIML", fixed.x = T)
+somfr_u.fit <- sem(somfr_u.model, data = df.full.2, se = "robust", missing = "FIML", fixed.x = T)
+somrr_d.fit <- sem(somrr_d.model, data = df.full.2, se = "robust", missing = "FIML", fixed.x = T)
+somrr_u.fit <- sem(somrr_u.model, data = df.full.2, se = "robust", missing = "FIML", fixed.x = T)
+fu.fit      <- sem(fu.model,      data = df.full.2, se = "robust", missing = "FIML", fixed.x = T)
 
 
 # Fit supplementary models
 
-s1.fit <- sem(s1.model, data = df.full.2, se = "robust", missing = "FIML", fixed.x = F)
-s2.fit <- sem(s2.model, data = df.full.2, se = "robust", missing = "FIML", fixed.x = F)
-s3.fit <- sem(s3.model, data = df.full.2, se = "robust", missing = "FIML", fixed.x = F)
-s4.fit <- sem(s4.model, data = df.full.2, se = "robust", missing = "FIML", fixed.x = F)
-s5.fit <- sem(s5.model, data = df.full.2, se = "robust", missing = "FIML", fixed.x = F)
-s6.fit <- sem(s6.model, data = df.full.2, se = "robust", missing = "FIML", fixed.x = F)
-s7.fit <- sem(s7.model, data = df.full.2, se = "robust", missing = "FIML", fixed.x = F)
+s1.fit <- sem(s1.model, data = df.full.2, se = "robust", missing = "FIML", fixed.x = T)
+s2.fit <- sem(s2.model, data = df.full.2, se = "robust", missing = "FIML", fixed.x = T)
+s3.fit <- sem(s3.model, data = df.full.2, se = "robust", missing = "FIML", fixed.x = T)
+s4.fit <- sem(s4.model, data = df.full.2, se = "robust", missing = "FIML", fixed.x = T)
+s5.fit <- sem(s5.model, data = df.full.2, se = "robust", missing = "FIML", fixed.x = T)
+s6.fit <- sem(s6.model, data = df.full.2, se = "robust", missing = "FIML", fixed.x = T)
+s7.fit <- sem(s7.model, data = df.full.2, se = "robust", missing = "FIML", fixed.x = T)
 
 
 # Evaluations full model set
@@ -443,5 +443,39 @@ plot(r.fu, model = "full", axes = c("LOC", "LOIC", "PA1"),
 # aic.results$weights <- weights$weights
 
 
+# ----------------------------------------------
+# Rescale 1 - center predictors to their mean
+# ---------------------------------------------
+r.fu  <- RSA(ls  ~ sa*ca, df)
+getPar(r.fu, "coef", model="SRR")
 
+### Center predictors to their respective mean (instead of grandmean)
+df$sa.c  <- scale(df$sa, center = T, scale = F)
+df$ca.c  <- scale(df$ca, center = T, scale = F)
+
+r.fu  <- RSA(ls  ~ sa.c*ca.c, df)
+plot(r.fu, model = "full")
+getPar(r.fu, "coef", model="SRR")
+
+
+# --------------------------------------------------
+# Rescale 2 - center predictors to their grandmean
+# --------------------------------------------------
+
+# 
+grandmean <- mean(c(df$sa, df$ca), na.rm = T)
+
+df$sa.c  <- (df$sa-grandmean)
+df$ca.c  <- (df$ca-grandmean)
+
+r.fu  <- RSA(ls  ~ sa.c*ca.c, df)
+plot(r.fu, model = "full", project = c("PA1", "LOC"))
+plot(r.fu, model = "full", type = "contour", project = c("PA1", "LOC"))
+getPar(r.fu, "coef", model="SRR")
+
+
+#### Values of C change due to granmean centering 
+#### The coefficient is about 17y years if predictors are centered to their 
+#### respective mean. The value for C changes to 26y if the values are 
+#### grandmean centered
 
