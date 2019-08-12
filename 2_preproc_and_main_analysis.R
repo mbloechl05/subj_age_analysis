@@ -306,60 +306,51 @@ plot(r.fu, model = "SRRR",
      axesStyles = list(LOC  = list(lty = "solid", lwd = 2, col = "black"),
                        LOIC = list(lty = "solid", lwd = 2, col = "black"),
                        PA1  = list(lty = "dotted", lwd = 2, col = "grey40")),
-     xlab = "Subjective age", ylab = "Actual age", zlab ="Life satisfaction",
+     xlab = "Subjective age", ylab = "Chronlogical age", zlab ="Life satisfaction",
      cex.tickLabel = 2, cex.axesLabel = 2,
+     rotation = list(x=-48, y=26, z=20),
+     label.rotation=list(x=22, y=-51, z=92),
      points = list(show=F), hull = T, legend = T,
-     project = c("LOC", "LOIC", "PA1"), param = F,
-     pal = colorRampPalette(c("#3e2b31", "#684852","#916572","#D091A4","#DFB1B4",
-                              "#EBD2CB","#f7edea","#f8f0ee", "#FBFFFE"))(15))
+     project = c("LOC", "LOIC", "PA1", "points"), param = F,
+     pal = colorRampPalette(c("#22303a","#3c5466", "#50748D", "#648096", "#748D9D", 
+                              "#96A8B6", "#B9C7D0", "#ccd6de", "#eef1f4", "#f4f6f8",
+                              "#ffffff"))(14))
 dev.off()
+
+
+
+p1 <- plot(r.fu, type = "contour", model = "SRRR",
+           axes = c("LOC", "PA1"),
+           xlab = "Subjective age", ylab = "Chronological age", 
+           zlab ="Life satisfaction",
+           cex.main = 1.3, cex.tickLabel = 2, cex.axesLabel = 2,
+           points = list(show=T, jitter = 0.00, color = "black"), hull = F, 
+           legend = F,
+           pal = colorRampPalette(c("#22303a","#3c5466", "#50748D", "#648096", "#748D9D", 
+                                    "#96A8B6", "#B9C7D0", "#ccd6de", "#eef1f4", "#f4f6f8",
+                                    "#ffffff"))(14))
+
+SP <- RSA.ST(r.fu, model = "SRRR")
 
 png("C:/Users/Maria/Desktop/learn/0_PhD/Projects/ageing_rsa/analysis/results/contour.png", 
     width = 9, height = 9, units = 'in', res = 600)
-plot(r.fu, type = "contour", model = "SRRR",
-     axes = c("LOC", "PA1"),
-     axesStyles = list(LOC  = list(lty = "solid", lwd = 6, col = "black"),
-                       PA1 = list(lty = "solid", lwd = 6, col = "black")),
-                      # LOIC  = list(lty = "solid", lwd = 6, col = "grey40")),
-     xlab = "Subjective age", ylab = "Actual age", zlab ="Life satisfaction",
-     cex.main = 1.3, cex.tickLabel = 2, cex.axesLabel = 2,
-     points = list(show=T, jitter = 0.005, color = "black"), hull = T, legend = F,
-     #project = c("LOC", "PA1"), param = F, 
-     pal = colorRampPalette(c("#3e2b31", "#684852","#916572","#D091A4","#DFB1B4",
-                              "#EBD2CB","#f7edea","#f8f0ee", "#FBFFFE"))(15))
+p1 + stat_contour(bins=40, alpha=0.7, color = "grey20") +
+  geom_abline(aes(intercept=0, slope=1), size=1, color="black") +
+#  geom_abline(aes(intercept=0, slope=-1), size=1, color="black") +
+  geom_abline(data=data.frame(SP[c("p10", "p11")]), 
+              aes_string(intercept="p10", slope="p11"), 
+              linetype="solid", color="#eef1f4", size=1)+
+  geom_abline(data=data.frame(SP[c("p10", "p11")]), 
+              aes_string(intercept="p10", slope="p11"), 
+              linetype="dashed", color="black", size=1)+
+  scale_x_continuous(expand=c(0,0)) + 
+  scale_y_continuous(expand=c(0,0)) +
+  theme(axis.text = element_text(color = "black", size = 23), 
+        axis.title.y = element_text(color = "black", size = 23, 
+                                    margin = margin(t = 0, r = 30, b = 0, l = 0)), 
+        axis.title.x = element_text(color = "black", size = 23,
+                                    margin = margin(t = 30, r = 0, b = 0, l = 0)))
 dev.off()
-
-
-
-# # ------------------------
-# #### Additional double check stuff: 
-# # ------------------------------
-# 
-# 
-# # Examine how many points lay below and above first principal axis
-# 
-# ## First plot PA1, LOC and dots with quadrants
-# plot(df$ca.s ~ jitter(df$sa.s, 3), pch = 16, xlab = "Subjective age", 
-#      ylab = "Chronological age", col = rgb(0,0,0, alpha = 0.3))
-# abline(a = 2.649, b = 1.170, col = "mediumvioletred", lwd = 3)
-# abline(a = 0, b = 1, col = "green4", lwd = 3)
-# abline(v = 0, lty = "dotted", lwd = 3)
-# abline(h = 0, lty = "dotted", lwd = 3)
-# 
-# ## Now calculate how many values are below and above the PA1
-# fpa.ca.fit <- 2.649 + 1.170 * df$sa.s
-# resi <- df$ca.s - fpa.ca.fit
-# 
-# sum(resi < 0)
-# sum(resi > 0)
-# 
-# ## Chack also how many values are below and above the LOC
-# loc.ca.fit <- 0 + 1 * df$sa.s
-# resi <- df$ca.s - loc.ca.fit
-# 
-# sum(resi < 0)
-# sum(resi > 0)
-
 
 
 

@@ -3,8 +3,35 @@
 # "Psychological benefits of subjective age bias" 
 # ==============================================================
 
+# # --------------------------------
+# # Additional double check stuff
+# # --------------------------------
+# 
+# 
+# # Examine how many points lay below and above first principal axis
+# 
+# ## First plot PA1, LOC and dots with quadrants
+# plot(df$ca.s ~ jitter(df$sa.s, 3), pch = 16, xlab = "Subjective age", 
+#      ylab = "Chronological age", col = rgb(0,0,0, alpha = 0.3))
+# abline(a = 2.649, b = 1.170, col = "mediumvioletred", lwd = 3)
+# abline(a = 0, b = 1, col = "green4", lwd = 3)
+# abline(v = 0, lty = "dotted", lwd = 3)
+# abline(h = 0, lty = "dotted", lwd = 3)
+# 
+# ## Now calculate how many values are below and above the PA1
+# fpa.ca.fit <- 2.649 + 1.170 * df$sa.s
+# resi <- df$ca.s - fpa.ca.fit
+# 
+# sum(resi < 0)
+# sum(resi > 0)
+# 
+# ## Chack also how many values are below and above the LOC
+# loc.ca.fit <- 0 + 1 * df$sa.s
+# resi <- df$ca.s - loc.ca.fit
+# 
+# sum(resi < 0)
+# sum(resi > 0)
 
-library(car)
 
 # ----------------------------------------------------
 # Re-run analysis excluding influential observations
@@ -376,6 +403,7 @@ r.fu  <- RSA(ls  ~ sa.s*ca.s, df.full)
 # modified seaborne
 plot(r.fu, model = "full", axes = c("LOC", "LOIC", "PA1"), 
      project = c("LOC", "LOIC", "PA1"))
+
 
 # # --------------------------------------------------
 # # Re-run analyses with full sample (pre-registered)
