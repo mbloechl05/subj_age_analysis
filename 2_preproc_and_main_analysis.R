@@ -231,15 +231,23 @@ aics <- as.data.frame(
 aics 
 
 
-### Get parameters full model and SOMRR model
-summary(somrr_d.fit, ci = T)
-summary(fu.fit, ci = T)
-
 ### Get CFI, SRMR, and RMSEA 
 fitmeasures(somrr_d.fit, fit.measures = c("CFI", "SRMR", "RMSEA"))
-fitmeasures(omrr.fit, fit.measures = c("CFI", "SRMR", "RMSEA"))
-fitmeasures(omfr.fit, fit.measures = c("CFI", "SRMR", "RMSEA"))
+fitmeasures(omrr.fit,    fit.measures = c("CFI", "SRMR", "RMSEA"))
+fitmeasures(fu.fit,      fit.measures = c("CFI", "SRMR", "RMSEA"))
+fitmeasures(omfr.fit,    fit.measures = c("CFI", "SRMR", "RMSEA"))
+fitmeasures(pb.fit,      fit.measures = c("CFI", "SRMR", "RMSEA"))
+fitmeasures(somfr_d.fit, fit.measures = c("CFI", "SRMR", "RMSEA"))
+fitmeasures(nu.fit,      fit.measures = c("CFI", "SRMR", "RMSEA"))
 
+### Get R squared
+inspect(somrr_d.fit, 'r2')
+inspect(omrr.fit,    'r2')
+inspect(omfr.fit,    'r2')
+inspect(omfr.fit,    'r2')
+inspect(pb.fit,      'r2')
+inspect(somfr_d.fit, 'r2')
+inspect(nu.fit,      'r2')
 
 ### Likelihood ratio tests of nested models
 anova(fu.fit, somrr_d.fit)
@@ -247,57 +255,28 @@ anova(somrr_d.fit, omrr.fit)
 anova(omrr.fit, omfr.fit)
 
 
+### Get parameters SOMRR model
+summary(somrr_d.fit, ci = T, fit.measures = T)
+
+### Get a4 for SOMRR model and significance test of a4 and S using RSA function
+r.fu  <- RSA(ls  ~ sa.s*ca.s, df) 
+getPar(r.fu, model = "SRRR")
+
+### Significance test S
+z = (1.210-1)/0.143
+2*pnorm(-abs(z))
+
 
 # --------
 # Plots 
 # --------
 
-# # 1.) Plot AIC results all models
-# ggplot(data = aic.results, aes(x = rowname, y = AIC)) +
-#   geom_bar(stat = "identity", fill = "plum") +
-#   scale_x_discrete(limits=c("som.fit", "fu.fit", "om.fit", "s6.fit", "s4.fit", 
-#                             "pb.fit", "s5.fit", "s2.fit", "s3.fit", "nu.fit",
-#                             "s7.fit", "s1.fit")) +
-#   coord_cartesian(ylim = c(23500, 24200))+
-#   theme(axis.text  = element_text(colour = "black", size = 20), 
-#         axis.title = element_text(colour = "black", size = 23), 
-#         legend.position = "none") 
-# 
-# 
-# # 2.) Plot AIC results for 3 models
-# aic.results.hyp <- aic.results %>% filter(
-#   rowname1 == "som.fit" | rowname == "om.fit" |rowname1 == "pb.fit"
-# )
-# 
-# ggplot(data = aic.results.hyp, aes(x = rowname, y = AIC)) +
-#   geom_bar(stat = "identity", fill = c("#183442", "#91A5AE","#A6A3AA"), color = "black") +
-#   scale_x_discrete(limits = c("som.fit", "om.fit", "pb.fit"), 
-#                    labels = c("Shifting optimal \n margin model", 
-#                               "Optimal margin \n model", 
-#                               "Positivity bias \n model")) +
-#   coord_cartesian(ylim = c(23800, 24100))+
-#   theme_classic(base_size = 20) +
-#   labs(x = "", y = "Akaike's Information Criterion") +
-#   theme(axis.text  = element_text(colour = "black", size = 20), 
-#         axis.title = element_text(colour = "black", size = 23), 
-#         legend.position = "none") 
-# 
-# 
-# # 3.) Plot Akaike weight result
-# ggplot(data = aic.results, aes(x = rowname, y = weights)) +
-#   geom_bar(stat = "identity", fill = "plum") +
-#   scale_x_discrete(limits=c("som.fit", "fu.fit", "om.fit", "s6.fit", "s4.fit", 
-#                             "pb.fit", "s5.fit", "s2.fit", "s3.fit", "nu.fit",
-#                             "s7.fit", "s1.fit")) +
-#   theme_classic()
+# We will plot the SOMRR model, one as a 3d and once as a contour plot.
 
-
-# 4.) Plot RSA result full model
-
-# Re-fit full model using RSA function
+# 1.) Re-fit full model using RSA function
 r.fu  <- RSA(ls  ~ sa.s*ca.s, df)
 
-# Plot full model
+# 2.) 3D plot
 png("C:/Users/Maria/Desktop/learn/0_PhD/Projects/ageing_rsa/analysis/results/3d.png", 
     width = 12, height = 12, units = 'in', res = 600)
 # modified seaborne
@@ -318,7 +297,7 @@ plot(r.fu, model = "SRRR",
 dev.off()
 
 
-
+# 3.) Contour plot
 p1 <- plot(r.fu, type = "contour", model = "SRRR",
            axes = c("LOC", "PA1"),
            xlab = "Subjective age", ylab = "Chronological age", 
