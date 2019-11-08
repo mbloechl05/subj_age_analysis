@@ -15,8 +15,7 @@ library(car) # for vif()
 source("C:/Users/Maria/Desktop/learn/0_PhD/Projects/ageing_rsa/analysis/subj_age_analysis/frm.R")
 
 # load data  
-df.raw  <- read.table("data/elsa/raw/tab/wave_2_core_data_v4.tab", sep = "\t", 
-                      header = T)
+df.raw  <- read.table("data/wave_2_core_data_v4.tab", sep = "\t", header = T)
 
 # select relevant variables
 df.full <- df.raw[,c("idauniq", "DhSex", "scold", "dhager", "sclifea", "sclifeb", 
@@ -60,40 +59,47 @@ df.full$sclifee_r <- 8-df.full$sclifee
 df.full$ls <- rowMeans(df.full[,c("sclifea_r",  "sclifeb_r",  "sclifec_r", 
                                   "sclifed_r", "sclifee_r")], na.rm = T)
 
-
-# 5.) Remove outliers chronological age
-
-### Calculate +/- 3 SD
-out <- 3*sd(df.full$ca, na.rm = T)
-
-### How many outliers
-sum(df.full$ca < mean(df.full$ca, na.rm = T) - out, na.rm = T) # -3 SD
-sum(df.full$ca > mean(df.full$ca, na.rm = T) + out, na.rm = T) # +3 SD
-
-### Mark people with chronological age +/- 3 SD as missing
-df.full$ca[df.full$ca > mean(df.full$ca, na.rm = T) + out | 
-             df.full$ca < mean(df.full$ca, na.rm = T) - out] <- NA
+# 5.) Exclude cases with missing data on variables
+df.eligible <- na.omit(df.full)
 
 
-# 6.) Remove outliers subjective age
+# 6.) Trim variables
+
+df <- df.eligible
+
+### 6.a) Trim variable chronological age
 
 ### Calculate +/- 3 SD
-out <- 3*sd(df.full$sa, na.rm = T)
+out <- 3*sd(df$ca, na.rm = T)
 
-### How many outliers 
-sum(df.full$sa < mean(df.full$sa, na.rm = T) - out, na.rm = T) # - 3 SD
-sum(df.full$sa > mean(df.full$sa, na.rm = T) + out, na.rm = T) # + 3 SD
+### How many will be excluded?
+sum(df$ca < mean(df$ca, na.rm = T) - out, na.rm = T) # -3 SD
+sum(df$ca > mean(df$ca, na.rm = T) + out, na.rm = T) # +3 SD
 
 ### Mark people with chronological age +/- 3 SD as missing
-df.full$sa[df.full$sa > mean(df.full$sa, na.rm = T) + out | 
-             df.full$sa < mean(df.full$sa, na.rm = T) - out] <- NA
+df$ca[df$ca > mean(df$ca, na.rm = T) + out | 
+             df$ca < mean(df$ca, na.rm = T) - out] <- NA
 
 
-# 7.) Exclude cases with missing data
-df <- na.omit(df.full)
+#### 6.b) Trim variable subjective age
+
+### Calculate +/- 3 SD
+out <- 3*sd(df$sa, na.rm = T)
+
+### How many will be excluded?
+sum(df$sa < mean(df$sa, na.rm = T) - out, na.rm = T) # - 3 SD
+sum(df$sa > mean(df$sa, na.rm = T) + out, na.rm = T) # + 3 SD
+
+### Mark people with chronological age +/- 3 SD as missing
+df$sa[df$sa > mean(df$sa, na.rm = T) + out | 
+             df$sa < mean(df$sa, na.rm = T) - out] <- NA
 
 
-# 8.) Standardise predictors
+### 6.c) Exclude cases from trimmed variables
+df <- na.omit(df)
+
+
+# 7.) Standardise predictors
 grandmean <- mean(c(df$sa, df$ca), na.rm = T)
 pooledsd  <- sqrt(((sd(df$sa)^2)+(sd(df$ca)^2))/2)
 
@@ -101,7 +107,7 @@ df$sa.s  <- (df$sa-grandmean)/pooledsd
 df$ca.s  <- (df$ca-grandmean)/pooledsd
 
 
-# 9.) Add squared and interaction terms of the predictors
+# 8.) Add squared and interaction terms of the predictors
 df$sa.s2 <- df$sa.s^2
 df$ca.s2 <- df$ca.s^2
 df$sa.ca <- df$sa.s*df$ca.s
@@ -112,7 +118,7 @@ df$sa.ca <- df$sa.s*df$ca.s
 # Descriptive statistics
 # -------------------------
 
-# 1.) Descriptive stats before excluding missing data
+# 1.) Descriptive stats full sample
 
 ### Continuous variables
 describe(df.full[,c("ls", "sa", "ca")])
@@ -122,26 +128,41 @@ table(df.full$sex)
 prop.table(table(df.full$sex))
 
 
-# 2.) Descriptive stats after excluding missing data
+# 2.) Descriptive stats eligible sample
 
 ### Continuous variables
-describe(df[,c("sa", "ca", "ls")])
+describe(df.eligible[,c("ls", "sa", "ca")])
+
+### Categorical variables
+table(df.eligible$sex)
+prop.table(table(df.eligible$sex))
+
+
+# 3.) Descriptive stats after trimming data
+
+### Continuous variables
+df$sa.bias <- df$sa - df$ca # substract chron. from subj. age
+describe(df[,c("sa", "ca", "ls", "DhSex", "sa.bias")])
 
 ### Categorical variables
 table(df$sex)
 prop.table(table(df$sex))
 
 
-# 3.) Zero-order correlation matrix
-cor(df[,c("DhSex", "sa", "ca", "ls")])
+# 4.) Zero-order correlation matrix
+cor(df[,c("DhSex", "sa", "ca", "ls", "sa.bias")])
+
+# 5.) Average subjective age bias
+
+describe(df$sa.bias)
 
 
-# 4.) Cronbachs alpha life satisfaction scale
+# 6.) Cronbachs alpha life satisfaction scale
 psych::alpha(df
              [,c("sclifea_r", "sclifeb_r", "sclifec_r", "sclifed_r", "sclifee_r")]
              )
 
-# 5.) Check for multicollinearity
+# 7.) Check for multicollinearity
 lm <- lm(ls ~ sa.s + ca.s + sa.s2 + sa.ca + ca.s2, data = df)
 vif(lm)
 
@@ -177,6 +198,10 @@ s7.fit <- sem(s7.model, data = df, se = "robust", estimator = "MLR")
 # ----------------------------------
 # Model evaluation and comparisons
 # ----------------------------------
+
+### Note that all "down" models provided a better fit than the respective "up"
+### models; the "up" models (somfr_u, somrr_u) were therefore excluded from 
+### further analyses
 
 ### Create list of all models
 models <- list(fu.fit, 
@@ -221,7 +246,7 @@ frm(aics)
 
 
 ### Full model, s1, s3, s5, and s7 are redundant --> exclude from list of models
-models_r <- models[-c(1,  11, 9, 13, 7)]
+models_r <- models[-c( 1, 11, 9, 13, 7)]
 
 ### Get AICs and other fit information for final model set
 aics <- as.data.frame(
@@ -243,7 +268,7 @@ fitmeasures(nu.fit,      fit.measures = c("CFI", "SRMR", "RMSEA"))
 ### Get R squared
 inspect(somrr_d.fit, 'r2')
 inspect(omrr.fit,    'r2')
-inspect(omfr.fit,    'r2')
+inspect(fu.fit,      'r2')
 inspect(omfr.fit,    'r2')
 inspect(pb.fit,      'r2')
 inspect(somfr_d.fit, 'r2')
@@ -257,14 +282,12 @@ anova(omrr.fit, omfr.fit)
 
 ### Get parameters SOMRR model
 summary(somrr_d.fit, ci = T, fit.measures = T)
+summary(omrr.fit, ci = T, fit.measures = T)
+summary(omfr.fit, ci = T, fit.measures = T)
 
-### Get a4 for SOMRR model and significance test of a4 and S using RSA function
+### Get a4 for SOMRR model and significance test using RSA function
 r.fu  <- RSA(ls  ~ sa.s*ca.s, df) 
 getPar(r.fu, model = "SRRR")
-
-### Significance test S
-z = (1.210-1)/0.143
-2*pnorm(-abs(z))
 
 
 # --------

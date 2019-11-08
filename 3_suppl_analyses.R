@@ -8,33 +8,156 @@
 # # --------------------------------
 # 
 # 
-# # Examine how many points lay below and above first principal axis
-# 
-# ## First plot PA1, LOC and dots with quadrants
-# plot(df$ca.s ~ jitter(df$sa.s, 3), pch = 16, xlab = "Subjective age", 
-#      ylab = "Chronological age", col = rgb(0,0,0, alpha = 0.3))
-# abline(a = 2.649, b = 1.170, col = "mediumvioletred", lwd = 3)
-# abline(a = 0, b = 1, col = "green4", lwd = 3)
-# abline(v = 0, lty = "dotted", lwd = 3)
-# abline(h = 0, lty = "dotted", lwd = 3)
-# 
-# ## Now calculate how many values are below and above the PA1
-# fpa.ca.fit <- 2.649 + 1.170 * df$sa.s
-# resi <- df$ca.s - fpa.ca.fit
-# 
-# sum(resi < 0)
-# sum(resi > 0)
-# 
-# ## Chack also how many values are below and above the LOC
-# loc.ca.fit <- 0 + 1 * df$sa.s
-# resi <- df$ca.s - loc.ca.fit
-# 
-# sum(resi < 0)
-# sum(resi > 0)
+# Examine how many points lay below and above first principal axis
 
+## First plot PA1, LOC and dots with quadrants
+plot(df$ca.s ~ jitter(df$sa.s, 3), pch = 16, xlab = "Subjective age",
+     ylab = "Chronological age", col = rgb(0,0,0, alpha = 0.3))
+abline(a = 2.649, b = 1.170, col = "mediumvioletred", lwd = 3) # pa1
+abline(a = 0, b = 1, col = "green4", lwd = 3) # loc
+abline(v = 0, lty = "dotted", lwd = 3)
+abline(h = 0, lty = "dotted", lwd = 3)
+
+## Now calculate how many values are below and above the PA1
+fpa.ca.fit <- 2.649 + 1.170 * df$sa.s
+resi <- df$ca.s - fpa.ca.fit
+
+sum(resi < 0)
+sum(resi > 0)
+
+## Chack also how many values are below and above the LOC
+loc.ca.fit <- 0 + 1 * df$sa.s
+resi <- df$ca.s - loc.ca.fit
+
+sum(resi < 0)
+sum(resi > 0)
+
+# -----------------------------------------------------
+# 1) Re-run analyses with full sample (pre-registered)
+# ------------------------------------------------------
+
+###
+### CHECK AGAIN IF THIS IS RIGHT!!
+###
+
+# Re-name full data frame to df
+df <- df.eligible
+
+# Standardise predictors again
+grandmean <- mean(c(df$sa, df$ca), na.rm = T)
+pooledsd  <- sqrt(((sd(df$sa)^2)+(sd(df$ca)^2))/2)
+
+df$sa.s  <- (df$sa-grandmean)/pooledsd
+df$ca.s  <- (df$ca-grandmean)/pooledsd
+
+# Add squared and interaction terms of the predictors again
+df$sa.s2 <- df$sa.s^2
+df$ca.s2 <- df$ca.s^2
+df$sa.ca <- df$sa.s*df$ca.s
+
+# Refit models
+nu.fit      <- sem(nu.model,      data = df, se = "robust", estimator = "MLR")
+pb.fit      <- sem(pb.model,      data = df, se = "robust", estimator = "MLR")
+omfr.fit    <- sem(omfr.model,    data = df, se = "robust", estimator = "MLR")
+omrr.fit    <- sem(omrr.model,    data = df, se = "robust", estimator = "MLR")
+somfr_d.fit <- sem(somfr_d.model, data = df, se = "robust", estimator = "MLR")
+somfr_u.fit <- sem(somfr_u.model, data = df, se = "robust", estimator = "MLR")
+somrr_d.fit <- sem(somrr_d.model, data = df, se = "robust", estimator = "MLR")
+somrr_u.fit <- sem(somrr_u.model, data = df, se = "robust", estimator = "MLR")
+fu.fit      <- sem(fu.model,      data = df, se = "robust", estimator = "MLR")
+s1.fit <- sem(s1.model, data = df, se = "robust", estimator = "MLR")
+s2.fit <- sem(s2.model, data = df, se = "robust", estimator = "MLR")
+s3.fit <- sem(s3.model, data = df, se = "robust", estimator = "MLR")
+s4.fit <- sem(s4.model, data = df, se = "robust", estimator = "MLR")
+s5.fit <- sem(s5.model, data = df, se = "robust", estimator = "MLR")
+s6.fit <- sem(s6.model, data = df, se = "robust", estimator = "MLR")
+s7.fit <- sem(s7.model, data = df, se = "robust", estimator = "MLR")
+
+
+### Get AICs and other information
+aics <- as.data.frame(
+  AICcmodavg::aictab(models, modnames = names(models), second.ord = F)
+)
+
+### Now, identify models with essentially the same log-likelihood as a simpler 
+### model and print warning if there are any
+frm(aics)
+
+
+### Full model, s1, s3, s5, and s7 are redundant --> exclude from list of models
+models_r <- models[-c( 1, 11, 9, 13, 7)]
+
+### Get AICs and other fit information for final model set
+aics <- as.data.frame(
+  AICcmodavg::aictab(models_r, modnames = names(models_r), second.ord = F)
+)
+
+aics 
+
+# ------------------------------------------------------------------------------
+# 2) Re-un analyses with trimmed variables and excluding people aged < 40 years
+# ------------------------------------------------------------------------------
+
+### UPDATE THIS ANALYSIS #########
+
+
+# mark people with age < 40 y as missing
+df$ca[df$ca < 40] <- NA
+
+# 3. Exclude cases with missing data (i.e. outliers)
+df <- na.omit(df)
+
+# Get descriptive stats after exclusion
+describe(df$ca)
+describe(df$sa)
+
+# Standardise predictors again
+grandmean <- mean(c(df$sa, df$ca), na.rm = T)
+pooledsd  <- sqrt(((sd(df$sa)^2)+(sd(df$ca)^2))/2)
+
+df$sa.s  <- (df$sa-grandmean)/pooledsd
+df$ca.s  <- (df$ca-grandmean)/pooledsd
+
+# Add squared and interaction terms of the predictors again
+df$sa.s2 <- df$sa.s^2
+df$ca.s2 <- df$ca.s^2
+df$sa.ca <- df$sa.s*df$ca.s
+
+# Refit models
+nu.fit <- sem(nu.model, data = df, se = "robust", estimator = "MLR")
+fu.fit <- sem(fu.model, data = df, se = "robust", estimator = "MLR")
+pb.fit <- sem(pb.model, data = df, se = "robust", estimator = "MLR")
+om.fit <- sem(om.model, data = df, se = "robust", estimator = "MLR")
+s1.fit <- sem(om.model, data = df, se = "robust", estimator = "MLR")
+s2.fit <- sem(om.model, data = df, se = "robust", estimator = "MLR")
+s3.fit <- sem(om.model, data = df, se = "robust", estimator = "MLR")
+s4.fit <- sem(om.model, data = df, se = "robust", estimator = "MLR")
+s5.fit <- sem(om.model, data = df, se = "robust", estimator = "MLR")
+s6.fit <- sem(om.model, data = df, se = "robust", estimator = "MLR")
+s7.fit <- sem(om.model, data = df, se = "robust", estimator = "MLR")
+
+### Get AICs and other information
+aics <- as.data.frame(
+  AICcmodavg::aictab(models, modnames = names(models), second.ord = F)
+)
+
+### Now, identify models with essentially the same log-likelihood as a simpler 
+### model and print warning if there are any
+frm(aics)
+
+
+### Full model, s1, s3, s5, and s7 are redundant --> exclude from list of models
+models_r <- models[-c( 1, 11, 9, 13, 7)]
+
+### Get AICs and other fit information for final model set
+aics <- as.data.frame(
+  AICcmodavg::aictab(models_r, modnames = names(models_r), second.ord = F)
+)
+
+aics 
 
 # ----------------------------------------------------
-# Re-run analysis excluding influential observations
+# 3) Re-run analysis excluding influential observations
 # ----------------------------------------------------
 
 # We choose three strategies to identify influential observations: 
@@ -42,10 +165,10 @@
 # data points that are deemed influential using both strategies. 
 
 
-# 1.) Identify influential observations
+# 3.1) Identify influential observations
 # --------------------------------------
 
-# 1.a) Cooks distance
+# 3.1.1) Cooks distance
 
 ### fit linear model
 model <- lm(ls ~ ca.s + ca.s2 + sa.s + sa.s2 + sa.ca, data = df)
@@ -66,7 +189,7 @@ text(x=1:length(cooksd)+1,
      col="red")  # add labels
 
 
-# 1.b) dffits
+# 3.1.2) dffits
 
 ### calculate df fits
 df_fits <- dffits(model)
@@ -80,7 +203,7 @@ plot(df_fits)
 
 
 
-# 2.) Exclude influential observations 
+# 3.2) Exclude influential observations 
 # --------------------------------------
 
 ### Add variable that contains row numbers to identify influential obs.
@@ -96,11 +219,10 @@ df_rm_io <-df[!(df$rn == 287 | df$rn == 8299),]
 
 
 
-# 3.) Re-run analyses
+# 3.3) Re-run analyses
 # ----------------------
 
-# Fit main models
-
+# Refit models
 nu.fit      <- sem(nu.model,      data = df_rm_io, se = "robust", estimator = "MLR")
 pb.fit      <- sem(pb.model,      data = df_rm_io, se = "robust", estimator = "MLR")
 omfr.fit    <- sem(omfr.model,    data = df_rm_io, se = "robust", estimator = "MLR")
@@ -110,10 +232,6 @@ somfr_u.fit <- sem(somfr_u.model, data = df_rm_io, se = "robust", estimator = "M
 somrr_d.fit <- sem(somrr_d.model, data = df_rm_io, se = "robust", estimator = "MLR")
 somrr_u.fit <- sem(somrr_u.model, data = df_rm_io, se = "robust", estimator = "MLR")
 fu.fit      <- sem(fu.model,      data = df_rm_io, se = "robust", estimator = "MLR")
-
-
-# Fit supplementary models
-
 s1.fit <- sem(s1.model, data = df_rm_io, se = "robust", estimator = "MLR")
 s2.fit <- sem(s2.model, data = df_rm_io, se = "robust", estimator = "MLR")
 s3.fit <- sem(s3.model, data = df_rm_io, se = "robust", estimator = "MLR")
@@ -122,28 +240,6 @@ s5.fit <- sem(s5.model, data = df_rm_io, se = "robust", estimator = "MLR")
 s6.fit <- sem(s6.model, data = df_rm_io, se = "robust", estimator = "MLR")
 s7.fit <- sem(s7.model, data = df_rm_io, se = "robust", estimator = "MLR")
 
-
-# Evaluations full model set
-
-### Create list of all models
-all.models <- list(fu.fit, 
-                   pb.fit, 
-                   omfr.fit, 
-                   omrr.fit, 
-                   somfr_d.fit, 
-                   somrr_d.fit, 
-                   s1.fit, 
-                   s2.fit, 
-                   s3.fit, 
-                   s4.fit, 
-                   s5.fit,   
-                   s6.fit, 
-                   s7.fit, 
-                   nu.fit)
-
-### Set names of models in list
-names(all.models) <- c("full", "pb", "omfr", "omrr", "somfr", "somrr", "s1", 
-                       "s2", "s3", "s4", "s5", "s6", "s7", "null")
 
 ### Get AICs and other information
 aics.3 <- as.data.frame(AICcmodavg::aictab(all.models, 
@@ -165,68 +261,8 @@ aics.3 <- as.data.frame(AICcmodavg::aictab(all.models.r,
 aics.3 # print results
 
 
-# # -------------------------------------------------------------
-# # Re-un analyses excluding outliers and people aged < 40 years
-# # -------------------------------------------------------------
-# 
-# # mark people with age < 40 y as missing
-# df$ca[df$ca < 40] <- NA
-# 
-# # 3. Exclude cases with missing data (i.e. outliers)
-# df <- na.omit(df)
-# 
-# # Get descriptive stats after exclusion
-# describe(df$ca)
-# describe(df$sa)
-# 
-# # Standardise predictors again
-# grandmean <- mean(c(df$sa, df$ca), na.rm = T)
-# pooledsd  <- sqrt(((sd(df$sa)^2)+(sd(df$ca)^2))/2)
-# 
-# df$sa.s  <- (df$sa-grandmean)/pooledsd
-# df$ca.s  <- (df$ca-grandmean)/pooledsd
-# 
-# # Add squared and interaction terms of the predictors again
-# df$sa.s2 <- df$sa.s^2
-# df$ca.s2 <- df$ca.s^2
-# df$sa.ca <- df$sa.s*df$ca.s
-# 
-# # Refit models
-# nu.fit <- sem(nu.model, data = df, se = "robust", estimator = "MLR")
-# fu.fit <- sem(fu.model, data = df, se = "robust", estimator = "MLR")
-# pb.fit <- sem(pb.model, data = df, se = "robust", estimator = "MLR")
-# om.fit <- sem(om.model, data = df, se = "robust", estimator = "MLR")
-# # s1.fit <- sem(om.model, data = df, se = "robust", estimator = "MLR")
-# # s2.fit <- sem(om.model, data = df, se = "robust", estimator = "MLR")
-# # s3.fit <- sem(om.model, data = df, se = "robust", estimator = "MLR")
-# # s4.fit <- sem(om.model, data = df, se = "robust", estimator = "MLR")
-# # s5.fit <- sem(om.model, data = df, se = "robust", estimator = "MLR")
-# # s6.fit <- sem(om.model, data = df, se = "robust", estimator = "MLR")
-# # s7.fit <- sem(om.model, data = df, se = "robust", estimator = "MLR")
-# 
-# # Get AICs of all models in the full model set
-# aic.results <- 
-#   AIC(nu.fit, fu.fit, 
-#       pb.fit, om.fit, som.fit, 
-#       s1.fit, s2.fit, s3.fit, s4.fit, s5.fit, s6.fit, s7.fit)
-# 
-# # Order results according to AIC (models with low AIC first)
-# aic.results <- aic.results[order(aic.results$AIC),]
-# 
-# # Add rownames as column to data frame
-# aic.results <- add_rownames(aic.results, var = "rowname")
-# 
-# # Make a vector from AICs 
-# aics.vector <- pull(aic.results, AIC)
-# 
-# # Calculate Akaike weights and attach to results of model comparisons
-# weights <- akaike.weights(aics.vector)
-# aic.results$weights <- weights$weights
-
-
-
 # -------------------------------------------------------------
-# Re-run analysis using FIML (instead of list-wise deletion)
+# 4) Re-run analysis using FIML (instead of list-wise deletion)
 # -------------------------------------------------------------
 
 # Re-do data preparation
@@ -331,8 +367,7 @@ df.full.2$ca.s2 <- df.full.2$ca.s^2
 df.full.2$sa.ca <- df.full.2$sa.s*df.full.2$ca.s
 
 
-# Fit main models
-
+# Refit models
 nu.fit      <- sem(nu.model,      data = df.full.2, se = "robust", missing = "FIML", fixed.x = T)
 pb.fit      <- sem(pb.model,      data = df.full.2, se = "robust", missing = "FIML", fixed.x = T)
 omfr.fit    <- sem(omfr.model,    data = df.full.2, se = "robust", missing = "FIML", fixed.x = T)
@@ -342,10 +377,6 @@ somfr_u.fit <- sem(somfr_u.model, data = df.full.2, se = "robust", missing = "FI
 somrr_d.fit <- sem(somrr_d.model, data = df.full.2, se = "robust", missing = "FIML", fixed.x = T)
 somrr_u.fit <- sem(somrr_u.model, data = df.full.2, se = "robust", missing = "FIML", fixed.x = T)
 fu.fit      <- sem(fu.model,      data = df.full.2, se = "robust", missing = "FIML", fixed.x = T)
-
-
-# Fit supplementary models
-
 s1.fit <- sem(s1.model, data = df.full.2, se = "robust", missing = "FIML", fixed.x = T)
 s2.fit <- sem(s2.model, data = df.full.2, se = "robust", missing = "FIML", fixed.x = T)
 s3.fit <- sem(s3.model, data = df.full.2, se = "robust", missing = "FIML", fixed.x = T)
@@ -405,70 +436,7 @@ plot(r.fu, model = "full", axes = c("LOC", "LOIC", "PA1"),
      project = c("LOC", "LOIC", "PA1"))
 
 
-# # --------------------------------------------------
-# # Re-run analyses with full sample (pre-registered)
-# # --------------------------------------------------
-# 
-# ### 
-# ### CHECK AGAIN IF THIS IS RIGHT!! 
-# ###
-# 
-# # Re-name full data frame to df
-# df <- df.full
-# 
-# # mark people with age < 40 y as missing
-# df$ca[df$ca < 40] <- NA
-# 
-# # 3. Exclude cases with missing data (i.e. outliers)
-# df <- na.omit(df)
-# 
-# # Get descriptive stats after exclusion
-# describe(df$ca)
-# describe(df$sa)
-# 
-# # Standardise predictors again
-# grandmean <- mean(c(df$sa, df$ca), na.rm = T)
-# pooledsd  <- sqrt(((sd(df$sa)^2)+(sd(df$ca)^2))/2)
-# 
-# df$sa.s  <- (df$sa-grandmean)/pooledsd
-# df$ca.s  <- (df$ca-grandmean)/pooledsd
-# 
-# # Add squared and interaction terms of the predictors again
-# df$sa.s2 <- df$sa.s^2
-# df$ca.s2 <- df$ca.s^2
-# df$sa.ca <- df$sa.s*df$ca.s
-# 
-# # Refit models
-# nu.fit <- sem(nu.model, data = df, se = "robust", estimator = "MLR")
-# fu.fit <- sem(fu.model, data = df, se = "robust", estimator = "MLR")
-# pb.fit <- sem(pb.model, data = df, se = "robust", estimator = "MLR")
-# om.fit <- sem(om.model, data = df, se = "robust", estimator = "MLR")
-# s1.fit <- sem(om.model, data = df, se = "robust", estimator = "MLR")
-# s2.fit <- sem(om.model, data = df, se = "robust", estimator = "MLR")
-# s3.fit <- sem(om.model, data = df, se = "robust", estimator = "MLR")
-# s4.fit <- sem(om.model, data = df, se = "robust", estimator = "MLR")
-# s5.fit <- sem(om.model, data = df, se = "robust", estimator = "MLR")
-# s6.fit <- sem(om.model, data = df, se = "robust", estimator = "MLR")
-# s7.fit <- sem(om.model, data = df, se = "robust", estimator = "MLR")
-# 
-# # Get AICs of all models in the full model set
-# aic.results <- 
-#   AIC(nu.fit, fu.fit, 
-#       pb.fit, om.fit, som.fit, 
-#       s1.fit, s2.fit, s3.fit, s4.fit, s5.fit, s6.fit, s7.fit)
-# 
-# # Order results according to AIC (models with low AIC first)
-# aic.results <- aic.results[order(aic.results$AIC),]
-# 
-# # Add rownames as column to data frame
-# aic.results <- add_rownames(aic.results, var = "rowname")
-# 
-# # Make a vector from AICs 
-# aics.vector <- pull(aic.results, AIC)
-# 
-# # Calculate Akaike weights and attach to results of model comparisons
-# weights <- akaike.weights(aics.vector)
-# aic.results$weights <- weights$weights
+
 
 
 # ----------------------------------------------

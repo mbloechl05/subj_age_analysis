@@ -61,7 +61,8 @@ ls ~ 1 + b1*sa.s + b2*ca.s + b3*sa.s2 + b4*sa.ca + b5*ca.s2
 # parameter constraints
 b3 == b5
 b3 + b4 + b5 == 0
-C := (b2-b1)/(4*b3)"
+C := (b2-b1)/(4*b3)
+bM := b1+b2"
 
 
 # 3.) Shifting optimal margin models
@@ -103,6 +104,7 @@ b5 < -0.000001
 b4^2 == 4*b3*b5
 C:= -(2*b1*b5 + b2*b4)/(4*b4*b5)
 S:= -b4/(2*b5)
+Sht:= S-1 # for testing S against 1
 bM := b1/S + b2"
 
 
@@ -116,6 +118,7 @@ b5 > 0.000001
 b4^2 == 4*b3*b5
 C:= -(2*b1*b5 + b2*b4)/(4*b4*b5)
 S:= -b4/(2*b5)
+Sht:= S-1 # for testing S against 1
 bM := b1/S + b2"
 
 
