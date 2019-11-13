@@ -289,6 +289,8 @@ summary(omfr.fit, ci = T, fit.measures = T)
 r.fu  <- RSA(ls  ~ sa.s*ca.s, df) 
 getPar(r.fu, model = "SRRR")
 
+getPar(r.fu, model = "SSQD")
+
 
 # --------
 # Plots 
