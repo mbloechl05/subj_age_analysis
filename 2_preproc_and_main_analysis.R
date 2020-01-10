@@ -358,30 +358,30 @@ ca$variable2 <- relevel(ca$variable, ref = "bi")
 ### Stacked bar plot
 
 png("analysis/results/3d_new.png", 
-    width = 12, height = 12, units = 'in', res = 600)
+    width = 9, height = 9, units = 'in', res = 600)
 ggplot(data = ca, aes(x = ca, y = value, fill = variable2)) +
   geom_bar(stat = "identity", colour = "black") +
-  scale_y_continuous("Subjective age", expand = c(0,0), limits = c(0,90), 
+  scale_y_continuous("Subjective age", expand = c(0,0), limits = c(0,95), 
                      breaks = c(0, 10, 20, 30, 40, 50, 60, 70, 80, 90)) +
   scale_x_continuous("Chronological age", 
                      breaks = c(40, 50, 60, 70, 80, 90)) +
-  scale_fill_manual(values = c('#f4f4f5','#7E8589'), 
+  scale_fill_manual(values = c('#f4f6f7','#50748E'), 
                     name = NULL,
                     breaks = c("sa", "bi"),
-                    labels=c("Optimal subj. age", 
+                    labels=c("Optimal subj. age   ", 
                              "Difference to chron. age")) + 
-  theme_classic(base_size = 15) +
-  theme(axis.title.x = element_text(colour = "black", size = 19, 
+  theme_classic(base_size = 16) +
+  theme(axis.title.x = element_text(colour = "black", size = 22, 
                                     margin = margin(t=10, r=0, b=0, l=0)), 
-        axis.title.y = element_text(colour = "black", size = 19, 
+        axis.title.y = element_text(colour = "black", size = 22, 
                        margin = margin(t=0, r=15, b=0, l=0)),         
-        axis.text.x  = element_text(colour = "black", size = 19, 
+        axis.text.x  = element_text(colour = "black", size = 22, 
                        margin = margin(t=15, r=0, b=0, l=0)), 
-        axis.text.y  = element_text(colour = "black", size = 19), 
+        axis.text.y  = element_text(colour = "black", size = 22), 
         panel.grid.major = element_blank(),
         panel.grid.minor = element_blank(),
         panel.background = element_blank(), 
         legend.position = "top", 
-        legend.text = element_text(size = 16))
+        legend.text = element_text(size = 22))
 dev.off()
 
