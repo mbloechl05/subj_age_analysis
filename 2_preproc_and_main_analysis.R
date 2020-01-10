@@ -13,7 +13,7 @@ library(ggplot2)
 library(car) # for vif()
 library(reshape)
 
-source("C:/Users/Maria/Desktop/learn/0_PhD/Projects/ageing_rsa/analysis/subj_age_analysis/frm.R")
+source("analysis/subj_age_analysis/frm.R")
 
 # load data  
 df.raw  <- read.table("data/wave_2_core_data_v4.tab", sep = "\t", header = T)
@@ -311,7 +311,7 @@ r.fu  <- RSA(ls  ~ sa.s*ca.s, df)
 
 ### 3D RSA plot
 
-png("C:/Users/Maria/Desktop/learn/0_PhD/Projects/ageing_rsa/analysis/results/3d_new.png", 
+png("analysis/results/3d_new.png", 
     width = 12, height = 12, units = 'in', res = 600)
 plot(r.fu, model = "SRRR",
      axes = c("LOC", "LOIC", "PA1"),
@@ -349,7 +349,7 @@ ca$variable2 <- relevel(ca$variable, ref = "bi") # re-level variable
 
 ### Stacked bar plot
 
-png("C:/Users/Maria/Desktop/learn/0_PhD/Projects/ageing_rsa/analysis/results/3d_new.png", 
+png("analysis/results/3d_new.png", 
     width = 12, height = 12, units = 'in', res = 600)
 ggplot(data = ca, aes(x = ca, y = value, fill = variable2)) +
   geom_bar(stat = "identity", colour = "black") +
