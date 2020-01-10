@@ -11,6 +11,7 @@ library(RSA)
 library(psych)
 library(ggplot2)
 library(car) # for vif()
+library(reshape)
 
 source("C:/Users/Maria/Desktop/learn/0_PhD/Projects/ageing_rsa/analysis/subj_age_analysis/frm.R")
 
@@ -237,7 +238,7 @@ names(models) <- c("full",
 
 ### Get AICs and other information
 aics <- as.data.frame(
-  AICcmodavg::aictab(models, modnames = names(models), second.ord = F)
+  AICcmodavg::aictab(models, modnames = names(models), second.ord = T)
   )
 
 ### Now, identify models with essentially the same log-likelihood as a simpler 
@@ -246,7 +247,7 @@ frm(aics)
 
 
 ### Full model, s1, s3, s5, and s7 are redundant --> exclude from list of models
-models_r <- models[-c( 1, 11, 9, 13, 7)]
+models_r <- models[-c( 1, 5, 11, 9, 13, 7)]
 
 ### Get AICs and other fit information for final model set
 aics <- as.data.frame(
@@ -262,7 +263,7 @@ fitmeasures(omrr.fit,    fit.measures = c("CFI", "SRMR", "RMSEA"))
 fitmeasures(fu.fit,      fit.measures = c("CFI", "SRMR", "RMSEA"))
 fitmeasures(omfr.fit,    fit.measures = c("CFI", "SRMR", "RMSEA"))
 fitmeasures(pb.fit,      fit.measures = c("CFI", "SRMR", "RMSEA"))
-fitmeasures(somfr_d.fit, fit.measures = c("CFI", "SRMR", "RMSEA"))
+fitmeasures(s6.fit,      fit.measures = c("CFI", "SRMR", "RMSEA"))
 fitmeasures(nu.fit,      fit.measures = c("CFI", "SRMR", "RMSEA"))
 
 ### Get R squared
@@ -270,41 +271,45 @@ inspect(somrr_d.fit, 'r2')
 inspect(omrr.fit,    'r2')
 inspect(fu.fit,      'r2')
 inspect(omfr.fit,    'r2')
+inspect(s6.fit,      'r2')
 inspect(pb.fit,      'r2')
-inspect(somfr_d.fit, 'r2')
 inspect(nu.fit,      'r2')
 
 ### Likelihood ratio tests of nested models
 anova(fu.fit, somrr_d.fit)
-anova(somrr_d.fit, omrr.fit)
-anova(omrr.fit, omfr.fit)
+anova(fu.fit, omrr.fit)
+anova(fu.fit, omfr.fit)
 
 
 ### Get parameters SOMRR model
 summary(somrr_d.fit, ci = T, fit.measures = T)
-summary(omrr.fit, ci = T, fit.measures = T)
-summary(omfr.fit, ci = T, fit.measures = T)
+summary(omrr.fit,    ci = T, fit.measures = T)
+summary(omfr.fit,    ci = T, fit.measures = T)
+
 
 ### Get a4 for SOMRR model and significance test using RSA function
 r.fu  <- RSA(ls  ~ sa.s*ca.s, df) 
-getPar(r.fu, model = "SRRR")
 
-getPar(r.fu, model = "SSQD")
+getPar(r.fu, model = "full")  # full
+getPar(r.fu, model = "SSQD")  # OMFR
+getPar(r.fu, model = "SRR")   # OMRR
+getPar(r.fu, model = "SRSQD") # SOMFR
+getPar(r.fu, model = "SRRR")  # SOMRR
+
 
 
 # --------
 # Plots 
 # --------
 
-# We will plot the SOMRR model, one as a 3d and once as a contour plot.
+# Figure 2A): Response surface of best fitting model
 
-# 1.) Re-fit full model using RSA function
+### Re-fit full model using RSA function
 r.fu  <- RSA(ls  ~ sa.s*ca.s, df)
 
-# 2.) 3D plot
-png("C:/Users/Maria/Desktop/learn/0_PhD/Projects/ageing_rsa/analysis/results/3d.png", 
+### 3D plot
+png("C:/Users/Maria/Desktop/learn/0_PhD/Projects/ageing_rsa/analysis/results/3d_new.png", 
     width = 12, height = 12, units = 'in', res = 600)
-# modified seaborne
 plot(r.fu, model = "SRRR",
      axes = c("LOC", "LOIC", "PA1"),
      axesStyles = list(LOC  = list(lty = "solid", lwd = 2, col = "black"),
@@ -314,20 +319,63 @@ plot(r.fu, model = "SRRR",
      cex.tickLabel = 2, cex.axesLabel = 2,
      rotation = list(x=-48, y=26, z=20),
      label.rotation=list(x=22, y=-51, z=92),
-     points = list(show=F), hull = T, legend = T,
-     project = c("LOC", "LOIC", "PA1", "points"), param = F,
-     pal = colorRampPalette(c("#22303a","#3c5466", "#50748D", "#648096", "#748D9D", 
-                              "#96A8B6", "#B9C7D0", "#ccd6de", "#eef1f4", "#f4f6f8",
-                              "#ffffff"))(14))
+     points = list(show=T), hull = T, legend = T,
+     project = c("LOC", "LOIC", "PA1"), param = F,
+     pal = colorRampPalette(c("#24353f", "#385061", "#50748D", "#6b8a9f", 
+                              "#7d98ab", "#9bafbe", "#bbc8d3", "#cad4dc", 
+                              "#e8ecef", "#f0f2f4", "#ffffff"))(14))
 dev.off()
 
+
+# Figure 2B): Stackedbar plot of optimal subjective ages 
+
+### First do some data wrangling 
+ca <- c(40,50,60,70,80,90) # chronological ages 
+ca <- data.frame(ca) # make a data frame
+ca$ca.sd <- (ca$ca - grandmean)/pooledsd # Standardised chronological ages
+p10 <- somrr_d.fit@ParTable$est[38] # extract p10 from parameters
+p11 <- somrr_d.fit@ParTable$est[37] # extract p11 from parameters
+ca$sa.sd <- ((ca$ca.sd - p10)/p11) # calculate corresponsding stand. subj. ages 
+ca$sa <- grandmean + (ca$sa.sd*pooledsd) # unstandard. subjective ages
+ca$bi <- ca$ca-ca$sa # calculate difference (i.e. bias)
+ca <- melt(ca, id.vars = c("ca", "ca.sd", "sa.sd")) # re-format to long format
+ca$variable2 <- relevel(ca$variable, ref = "bi") # re-level variable
+
+### Stacked bar plot 
+png("C:/Users/Maria/Desktop/learn/0_PhD/Projects/ageing_rsa/analysis/results/3d_new.png", 
+    width = 12, height = 12, units = 'in', res = 600)
+ggplot(data = ca, aes(x = ca, y = value, fill = variable2)) +
+  geom_bar(stat = "identity", colour = "black") +
+  scale_y_continuous("Subjective age", expand = c(0,0), limits = c(0,90), 
+                     breaks = c(0, 10, 20, 30, 40, 50, 60, 70, 80, 90)) +
+  scale_x_continuous("Chronological age", 
+                     breaks = c(40, 50, 60, 70, 80, 90)) +
+  scale_fill_manual(values = c('#f4f4f5','#7E8589'), 
+                    name = NULL,
+                    breaks = c("sa", "bi"),
+                    labels=c("Optimal subj. age", 
+                             "Difference to chron. age")) + 
+  theme_classic(base_size = 15) +
+  theme(axis.title.x = element_text(colour = "black", size = 19, 
+                                    margin = margin(t=10, r=0, b=0, l=0)), 
+        axis.title.y = element_text(colour = "black", size = 19, 
+                       margin = margin(t=0, r=15, b=0, l=0)),         
+        axis.text.x  = element_text(colour = "black", size = 19, 
+                       margin = margin(t=15, r=0, b=0, l=0)), 
+        axis.text.y  = element_text(colour = "black", size = 19), 
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        panel.background = element_blank(), 
+        legend.position = "top", 
+        legend.text = element_text(size = 16))
+dev.off()
 
 # 3.) Contour plot
 p1 <- plot(r.fu, type = "contour", model = "SRRR",
            axes = c("LOC", "PA1"),
            xlab = "Subjective age", ylab = "Chronological age", 
            zlab ="Life satisfaction",
-           cex.main = 1.3, cex.tickLabel = 2, cex.axesLabel = 2,
+           #cex.main = 1.3, cex.tickLabel = 2, cex.axesLabel = 2,
            points = list(show=T, jitter = 0.00, color = "black"), hull = F, 
            legend = F,
            pal = colorRampPalette(c("#22303a","#3c5466", "#50748D", "#648096", "#748D9D", 
@@ -340,7 +388,7 @@ png("C:/Users/Maria/Desktop/learn/0_PhD/Projects/ageing_rsa/analysis/results/con
     width = 9, height = 9, units = 'in', res = 600)
 p1 + stat_contour(bins=40, alpha=0.7, color = "grey20") +
   geom_abline(aes(intercept=0, slope=1), size=1, color="black") +
-#  geom_abline(aes(intercept=0, slope=-1), size=1, color="black") +
+  #  geom_abline(aes(intercept=0, slope=-1), size=1, color="black") +
   geom_abline(data=data.frame(SP[c("p10", "p11")]), 
               aes_string(intercept="p10", slope="p11"), 
               linetype="solid", color="#eef1f4", size=1)+
@@ -351,10 +399,8 @@ p1 + stat_contour(bins=40, alpha=0.7, color = "grey20") +
   scale_y_continuous(expand=c(0,0)) +
   theme(axis.text = element_text(color = "black", size = 23), 
         axis.title.y = element_text(color = "black", size = 23, 
-                                    margin = margin(t = 0, r = 30, b = 0, l = 0)), 
+                                    margin = margin(t=0, r=30, b=0, l=0)), 
         axis.title.x = element_text(color = "black", size = 23,
-                                    margin = margin(t = 30, r = 0, b = 0, l = 0)))
+                                    margin = margin(t=30, r=0, b=0, l=0)))
 dev.off()
-
-
 
