@@ -153,17 +153,12 @@ prop.table(table(df$sex))
 # 4.) Zero-order correlation matrix
 cor(df[,c("DhSex", "sa", "ca", "ls", "sa.bias")])
 
-# 5.) Average subjective age bias
-
-describe(df$sa.bias)
-
-
-# 6.) Cronbachs alpha life satisfaction scale
+# 5.) Cronbachs alpha life satisfaction scale
 psych::alpha(df
              [,c("sclifea_r", "sclifeb_r", "sclifec_r", "sclifed_r", "sclifee_r")]
              )
 
-# 7.) Check for multicollinearity
+# 6.) Check for multicollinearity
 lm <- lm(ls ~ sa.s + ca.s + sa.s2 + sa.ca + ca.s2, data = df)
 vif(lm)
 
