@@ -302,12 +302,15 @@ getPar(r.fu, model = "SRRR")  # SOMRR
 # Plots 
 # --------
 
+
 # Figure 2A): Response surface of best fitting model
 
 ### Re-fit full model using RSA function
+
 r.fu  <- RSA(ls  ~ sa.s*ca.s, df)
 
-### 3D plot
+### 3D RSA plot
+
 png("C:/Users/Maria/Desktop/learn/0_PhD/Projects/ageing_rsa/analysis/results/3d_new.png", 
     width = 12, height = 12, units = 'in', res = 600)
 plot(r.fu, model = "SRRR",
@@ -327,9 +330,11 @@ plot(r.fu, model = "SRRR",
 dev.off()
 
 
+
 # Figure 2B): Stackedbar plot of optimal subjective ages 
 
 ### First do some data wrangling 
+
 ca <- c(40,50,60,70,80,90) # chronological ages 
 ca <- data.frame(ca) # make a data frame
 ca$ca.sd <- (ca$ca - grandmean)/pooledsd # Standardised chronological ages
@@ -341,7 +346,9 @@ ca$bi <- ca$ca-ca$sa # calculate difference (i.e. bias)
 ca <- melt(ca, id.vars = c("ca", "ca.sd", "sa.sd")) # re-format to long format
 ca$variable2 <- relevel(ca$variable, ref = "bi") # re-level variable
 
-### Stacked bar plot 
+
+### Stacked bar plot
+
 png("C:/Users/Maria/Desktop/learn/0_PhD/Projects/ageing_rsa/analysis/results/3d_new.png", 
     width = 12, height = 12, units = 'in', res = 600)
 ggplot(data = ca, aes(x = ca, y = value, fill = variable2)) +
@@ -368,39 +375,5 @@ ggplot(data = ca, aes(x = ca, y = value, fill = variable2)) +
         panel.background = element_blank(), 
         legend.position = "top", 
         legend.text = element_text(size = 16))
-dev.off()
-
-# 3.) Contour plot
-p1 <- plot(r.fu, type = "contour", model = "SRRR",
-           axes = c("LOC", "PA1"),
-           xlab = "Subjective age", ylab = "Chronological age", 
-           zlab ="Life satisfaction",
-           #cex.main = 1.3, cex.tickLabel = 2, cex.axesLabel = 2,
-           points = list(show=T, jitter = 0.00, color = "black"), hull = F, 
-           legend = F,
-           pal = colorRampPalette(c("#22303a","#3c5466", "#50748D", "#648096", "#748D9D", 
-                                    "#96A8B6", "#B9C7D0", "#ccd6de", "#eef1f4", "#f4f6f8",
-                                    "#ffffff"))(14))
-
-SP <- RSA.ST(r.fu, model = "SRRR")
-
-png("C:/Users/Maria/Desktop/learn/0_PhD/Projects/ageing_rsa/analysis/results/contour.png", 
-    width = 9, height = 9, units = 'in', res = 600)
-p1 + stat_contour(bins=40, alpha=0.7, color = "grey20") +
-  geom_abline(aes(intercept=0, slope=1), size=1, color="black") +
-  #  geom_abline(aes(intercept=0, slope=-1), size=1, color="black") +
-  geom_abline(data=data.frame(SP[c("p10", "p11")]), 
-              aes_string(intercept="p10", slope="p11"), 
-              linetype="solid", color="#eef1f4", size=1)+
-  geom_abline(data=data.frame(SP[c("p10", "p11")]), 
-              aes_string(intercept="p10", slope="p11"), 
-              linetype="dashed", color="black", size=1)+
-  scale_x_continuous(expand=c(0,0)) + 
-  scale_y_continuous(expand=c(0,0)) +
-  theme(axis.text = element_text(color = "black", size = 23), 
-        axis.title.y = element_text(color = "black", size = 23, 
-                                    margin = margin(t=0, r=30, b=0, l=0)), 
-        axis.title.x = element_text(color = "black", size = 23,
-                                    margin = margin(t=30, r=0, b=0, l=0)))
 dev.off()
 
