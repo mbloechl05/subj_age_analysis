@@ -24,31 +24,29 @@ df$ca.s2 <- df$ca.s^2
 df$sa.ca <- df$sa.s*df$ca.s
 
 # Refit models
-nu.fit      <- sem(nu.model,      data = df, se = "robust", estimator = "MLR")
-pb.fit      <- sem(pb.model,      data = df, se = "robust", estimator = "MLR")
-omfr.fit    <- sem(omfr.model,    data = df, se = "robust", estimator = "MLR")
-omrr.fit    <- sem(omrr.model,    data = df, se = "robust", estimator = "MLR")
-somfr_d.fit <- sem(somfr_d.model, data = df, se = "robust", estimator = "MLR")
-somfr_u.fit <- sem(somfr_u.model, data = df, se = "robust", estimator = "MLR")
-somrr_d.fit <- sem(somrr_d.model, data = df, se = "robust", estimator = "MLR")
-somrr_u.fit <- sem(somrr_u.model, data = df, se = "robust", estimator = "MLR")
-fu.fit      <- sem(fu.model,      data = df, se = "robust", estimator = "MLR")
+nu.fit <- sem(nu.model, data = df, se = "robust", estimator = "MLR")
+fu.fit <- sem(fu.model, data = df, se = "robust", estimator = "MLR")
+a1.fit <- sem(a1.model, data = df, se = "robust", estimator = "MLR")
+b1.fit <- sem(b1.model, data = df, se = "robust", estimator = "MLR")
+a2.fit <- sem(a2.model, data = df, se = "robust", estimator = "MLR")
+b2.fit <- sem(b2.model, data = df, se = "robust", estimator = "MLR")
+a3.fit <- sem(a3.model, data = df, se = "robust", estimator = "MLR")
+b3.fit <- sem(b3.model, data = df, se = "robust", estimator = "MLR")
 s1.fit <- sem(s1.model, data = df, se = "robust", estimator = "MLR")
 s2.fit <- sem(s2.model, data = df, se = "robust", estimator = "MLR")
 s3.fit <- sem(s3.model, data = df, se = "robust", estimator = "MLR")
 s4.fit <- sem(s4.model, data = df, se = "robust", estimator = "MLR")
 s5.fit <- sem(s5.model, data = df, se = "robust", estimator = "MLR")
 s6.fit <- sem(s6.model, data = df, se = "robust", estimator = "MLR")
-s7.fit <- sem(s7.model, data = df, se = "robust", estimator = "MLR")
 
 ### Create list of all models
-models <- list(fu.fit, pb.fit, omfr.fit,  omrr.fit, somfr_d.fit, somrr_d.fit, 
-               s1.fit, s2.fit, s3.fit, s4.fit, s5.fit, s6.fit, s7.fit, nu.fit)
+models <- list(fu.fit, a1.fit, b1.fit, a2.fit, b2.fit, a3.fit, b3.fit, 
+               s1.fit, s2.fit, s3.fit, s4.fit, s5.fit, s6.fit, nu.fit)
 
 ### Set names of models in list
-names(models) <- c("full", "pb","omfr", "omrr", "somfr", "somrr", "s1", "s2", 
-                   "s3", "s4", "s5", "s6", "s7", "null")
-
+names(models) <- c("full", "model-1a", "model-1b", "model-2a", "model-2b", 
+                   "model-3a", "model-3b", "model-s1", "model-s2", "model-s3", 
+                   "model-s4", "model-s5", "model-s6", "null")
 
 ### Get AICs and other information
 aics <- as.data.frame(
@@ -60,9 +58,9 @@ aics <- as.data.frame(
 aics
 frm(aics)
 
-
-### Full model, omrr, s1, s3, s5, and s7 are redundant --> exclude from list of models
-models_r <- models[-c( 1, 4, 11, 9, 13, 7)]
+### full, model-2b, model-3a, model-s5, model-s3, model-s6, model-s1 are redundant 
+### --> exclude from list of models
+models_r <- models[-c( 1, 5, 6, 12, 10, 13, 8)]
 
 ### Get AICs and other fit information for final model set
 aics <- as.data.frame(
@@ -168,30 +166,29 @@ df_rm_io <-df[!(df$rn == 2495 | df$rn == 8299),]
 # ----------------------
 
 # Refit models
-nu.fit      <- sem(nu.model,      data = df_rm_io, se = "robust", estimator = "MLR")
-pb.fit      <- sem(pb.model,      data = df_rm_io, se = "robust", estimator = "MLR")
-omfr.fit    <- sem(omfr.model,    data = df_rm_io, se = "robust", estimator = "MLR")
-omrr.fit    <- sem(omrr.model,    data = df_rm_io, se = "robust", estimator = "MLR")
-somfr_d.fit <- sem(somfr_d.model, data = df_rm_io, se = "robust", estimator = "MLR")
-somfr_u.fit <- sem(somfr_u.model, data = df_rm_io, se = "robust", estimator = "MLR")
-somrr_d.fit <- sem(somrr_d.model, data = df_rm_io, se = "robust", estimator = "MLR")
-somrr_u.fit <- sem(somrr_u.model, data = df_rm_io, se = "robust", estimator = "MLR")
-fu.fit      <- sem(fu.model,      data = df_rm_io, se = "robust", estimator = "MLR")
+nu.fit <- sem(nu.model, data = df_rm_io, se = "robust", estimator = "MLR")
+fu.fit <- sem(fu.model, data = df_rm_io, se = "robust", estimator = "MLR")
+a1.fit <- sem(a1.model, data = df_rm_io, se = "robust", estimator = "MLR")
+b1.fit <- sem(b1.model, data = df_rm_io, se = "robust", estimator = "MLR")
+a2.fit <- sem(a2.model, data = df_rm_io, se = "robust", estimator = "MLR")
+b2.fit <- sem(b2.model, data = df_rm_io, se = "robust", estimator = "MLR")
+a3.fit <- sem(a3.model, data = df_rm_io, se = "robust", estimator = "MLR")
+b3.fit <- sem(b3.model, data = df_rm_io, se = "robust", estimator = "MLR")
 s1.fit <- sem(s1.model, data = df_rm_io, se = "robust", estimator = "MLR")
 s2.fit <- sem(s2.model, data = df_rm_io, se = "robust", estimator = "MLR")
 s3.fit <- sem(s3.model, data = df_rm_io, se = "robust", estimator = "MLR")
 s4.fit <- sem(s4.model, data = df_rm_io, se = "robust", estimator = "MLR")
 s5.fit <- sem(s5.model, data = df_rm_io, se = "robust", estimator = "MLR")
 s6.fit <- sem(s6.model, data = df_rm_io, se = "robust", estimator = "MLR")
-s7.fit <- sem(s7.model, data = df_rm_io, se = "robust", estimator = "MLR")
 
 ### Create list of all models
-models <- list(fu.fit, pb.fit, omfr.fit,  omrr.fit, somfr_d.fit, somrr_d.fit, 
-               s1.fit, s2.fit, s3.fit, s4.fit, s5.fit, s6.fit, s7.fit, nu.fit)
+models <- list(fu.fit, a1.fit, b1.fit, a2.fit, b2.fit, a3.fit, b3.fit, 
+               s1.fit, s2.fit, s3.fit, s4.fit, s5.fit, s6.fit, nu.fit)
 
 ### Set names of models in list
-names(models) <- c("full", "pb","omfr", "omrr", "somfr", "somrr", "s1", "s2", 
-                   "s3", "s4", "s5", "s6", "s7", "null")
+names(models) <- c("full", "model-1a", "model-1b", "model-2a", "model-2b", 
+                   "model-3a", "model-3b", "model-s1", "model-s2", "model-s3", 
+                   "model-s4", "model-s5", "model-s6", "null")
 
 ### Get AICs and other information
 aics <- as.data.frame(
@@ -203,8 +200,9 @@ aics <- as.data.frame(
 aics
 frm(aics)
 
-### Full model, s1, s3, s5, and s7 are redundant --> exclude from list of models
-models_r <- models[-c( 1, 11, 9, 13, 7)]
+### full, model-3a, model-s5, model-s3, model-s6, model-s1 are redundant --> 
+### exclude from list of models
+models_r <- models[-c( 1, 6, 12, 10, 13, 8)]
 
 ### Get AICs and other fit information for final model set
 aics <- as.data.frame(
@@ -256,31 +254,30 @@ df$sa.s2 <- df$sa.s^2
 df$ca.s2 <- df$ca.s^2
 df$sa.ca <- df$sa.s*df$ca.s
 
-### Re-fit models
-nu.fit      <- sem(nu.model,      data = df, se = "robust", estimator = "MLR")
-pb.fit      <- sem(pb.model,      data = df, se = "robust", estimator = "MLR")
-omfr.fit    <- sem(omfr.model,    data = df, se = "robust", estimator = "MLR")
-omrr.fit    <- sem(omrr.model,    data = df, se = "robust", estimator = "MLR")
-somfr_d.fit <- sem(somfr_d.model, data = df, se = "robust", estimator = "MLR")
-somfr_u.fit <- sem(somfr_u.model, data = df, se = "robust", estimator = "MLR")
-somrr_d.fit <- sem(somrr_d.model, data = df, se = "robust", estimator = "MLR")
-somrr_u.fit <- sem(somrr_u.model, data = df, se = "robust", estimator = "MLR")
-fu.fit      <- sem(fu.model,      data = df, se = "robust", estimator = "MLR")
+# Refit models
+nu.fit <- sem(nu.model, data = df, se = "robust", estimator = "MLR")
+fu.fit <- sem(fu.model, data = df, se = "robust", estimator = "MLR")
+a1.fit <- sem(a1.model, data = df, se = "robust", estimator = "MLR")
+b1.fit <- sem(b1.model, data = df, se = "robust", estimator = "MLR")
+a2.fit <- sem(a2.model, data = df, se = "robust", estimator = "MLR")
+b2.fit <- sem(b2.model, data = df, se = "robust", estimator = "MLR")
+a3.fit <- sem(a3.model, data = df, se = "robust", estimator = "MLR")
+b3.fit <- sem(b3.model, data = df, se = "robust", estimator = "MLR")
 s1.fit <- sem(s1.model, data = df, se = "robust", estimator = "MLR")
 s2.fit <- sem(s2.model, data = df, se = "robust", estimator = "MLR")
 s3.fit <- sem(s3.model, data = df, se = "robust", estimator = "MLR")
 s4.fit <- sem(s4.model, data = df, se = "robust", estimator = "MLR")
 s5.fit <- sem(s5.model, data = df, se = "robust", estimator = "MLR")
 s6.fit <- sem(s6.model, data = df, se = "robust", estimator = "MLR")
-s7.fit <- sem(s7.model, data = df, se = "robust", estimator = "MLR")
 
 ### Create list of all models
-models <- list(fu.fit, pb.fit, omfr.fit,  omrr.fit, somfr_d.fit, somrr_d.fit, 
-               s1.fit, s2.fit, s3.fit, s4.fit, s5.fit, s6.fit, s7.fit, nu.fit)
+models <- list(fu.fit, a1.fit, b1.fit, a2.fit, b2.fit, a3.fit, b3.fit, 
+               s1.fit, s2.fit, s3.fit, s4.fit, s5.fit, s6.fit, nu.fit)
 
 ### Set names of models in list
-names(models) <- c("full", "pb","omfr", "omrr", "somfr", "somrr", "s1", "s2", 
-                   "s3", "s4", "s5", "s6", "s7", "null")
+names(models) <- c("full", "model-1a", "model-1b", "model-2a", "model-2b", 
+                   "model-3a", "model-3b", "model-s1", "model-s2", "model-s3", 
+                   "model-s4", "model-s5", "model-s6", "null")
 
 ### Get AICs and other information
 aics <- as.data.frame(
@@ -292,8 +289,9 @@ aics <- as.data.frame(
 aics
 frm(aics)
 
-### Full model, s1, s3, s5, and s7 are redundant --> exclude from list of models
-models_r <- models[-c( 1, 11, 9, 13, 7)]
+### full, model-3a, model-s5, model-s3, model-s6, model-s1 are redundant --> 
+### exclude from list of models
+models_r <- models[-c( 1, 6, 12, 10, 13, 8)]
 
 ### Get AICs and other fit information for final model set
 aics <- as.data.frame(
@@ -342,31 +340,30 @@ df$sa.ca <- df$sa.s*df$ca.s
 
 # 4.2) Re-run analyses 
 
-### Refit models
-nu.fit      <- sem(nu.model,      data = df, se = "robust", missing = "fiml", fixed.x = T)
-pb.fit      <- sem(pb.model,      data = df, se = "robust", missing = "fiml", fixed.x = T)
-omfr.fit    <- sem(omfr.model,    data = df, se = "robust", missing = "fiml", fixed.x = T)
-omrr.fit    <- sem(omrr.model,    data = df, se = "robust", missing = "fiml", fixed.x = T)
-somfr_d.fit <- sem(somfr_d.model, data = df, se = "robust", missing = "fiml", fixed.x = T)
-somfr_u.fit <- sem(somfr_u.model, data = df, se = "robust", missing = "fiml", fixed.x = T)
-somrr_d.fit <- sem(somrr_d.model, data = df, se = "robust", missing = "fiml", fixed.x = T)
-somrr_u.fit <- sem(somrr_u.model, data = df, se = "robust", missing = "fiml", fixed.x = T)
-fu.fit      <- sem(fu.model,      data = df, se = "robust", missing = "fiml", fixed.x = T)
+# Refit models
+nu.fit <- sem(nu.model, data = df, se = "robust", missing = "fiml", fixed.x = T)
+fu.fit <- sem(fu.model, data = df, se = "robust", missing = "fiml", fixed.x = T)
+a1.fit <- sem(a1.model, data = df, se = "robust", missing = "fiml", fixed.x = T)
+b1.fit <- sem(b1.model, data = df, se = "robust", missing = "fiml", fixed.x = T)
+a2.fit <- sem(a2.model, data = df, se = "robust", missing = "fiml", fixed.x = T)
+b2.fit <- sem(b2.model, data = df, se = "robust", missing = "fiml", fixed.x = T)
+a3.fit <- sem(a3.model, data = df, se = "robust", missing = "fiml", fixed.x = T)
+b3.fit <- sem(b3.model, data = df, se = "robust", missing = "fiml", fixed.x = T)
 s1.fit <- sem(s1.model, data = df, se = "robust", missing = "fiml", fixed.x = T)
 s2.fit <- sem(s2.model, data = df, se = "robust", missing = "fiml", fixed.x = T)
 s3.fit <- sem(s3.model, data = df, se = "robust", missing = "fiml", fixed.x = T)
 s4.fit <- sem(s4.model, data = df, se = "robust", missing = "fiml", fixed.x = T)
 s5.fit <- sem(s5.model, data = df, se = "robust", missing = "fiml", fixed.x = T)
 s6.fit <- sem(s6.model, data = df, se = "robust", missing = "fiml", fixed.x = T)
-s7.fit <- sem(s7.model, data = df, se = "robust", missing = "fiml", fixed.x = T)
 
 ### Create list of all models
-models <- list(fu.fit, pb.fit, omfr.fit,  omrr.fit, somfr_d.fit, somrr_d.fit, 
-               s1.fit, s2.fit, s3.fit, s4.fit, s5.fit, s6.fit, s7.fit, nu.fit)
+models <- list(fu.fit, a1.fit, b1.fit, a2.fit, b2.fit, a3.fit, b3.fit, 
+               s1.fit, s2.fit, s3.fit, s4.fit, s5.fit, s6.fit, nu.fit)
 
 ### Set names of models in list
-names(models) <- c("full", "pb","omfr", "omrr", "somfr", "somrr", "s1", "s2", 
-                   "s3", "s4", "s5", "s6", "s7", "null")
+names(models) <- c("full", "model-1a", "model-1b", "model-2a", "model-2b", 
+                   "model-3a", "model-3b", "model-s1", "model-s2", "model-s3", 
+                   "model-s4", "model-s5", "model-s6", "null")
 
 ### Get AICs and other information
 aics <- as.data.frame(
@@ -378,8 +375,9 @@ aics <- as.data.frame(
 aics
 frm(aics)
 
-### Full model, s1, s3, s5, and s7 are redundant --> exclude from list of models
-models_r <- models[-c( 1, 11, 9, 13, 7)]
+### full, model-3a, model-s5, model-s3, model-s6, model-s1 are redundant --> 
+### exclude from list of models
+models_r <- models[-c( 1, 6, 12, 10, 13, 8)]
 
 ### Get AICs and other fit information for final model set
 aics <- as.data.frame(
@@ -387,9 +385,4 @@ aics <- as.data.frame(
 )
 
 aics 
-
-
-
-
-
 
