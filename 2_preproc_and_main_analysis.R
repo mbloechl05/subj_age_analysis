@@ -154,9 +154,8 @@ prop.table(table(df$sex))
 cor(df[,c("DhSex", "sa", "ca", "ls", "sa.bias")])
 
 # 5.) Cronbachs alpha life satisfaction scale
-psych::alpha(df
-             [,c("sclifea_r", "sclifeb_r", "sclifec_r", "sclifed_r", "sclifee_r")]
-             )
+psych::alpha(df[,c("sclifea_r", "sclifeb_r", "sclifec_r", 
+                   "sclifed_r", "sclifee_r")])
 
 # 6.) Check for multicollinearity
 lm <- lm(ls ~ sa.s + ca.s + sa.s2 + sa.ca + ca.s2, data = df)
@@ -167,28 +166,25 @@ vif(lm)
 # Fit polynomial regression models
 # ----------------------------------
 
+# Fit full and null model
+nu.fit <- sem(nu.model, data = df, se = "robust", estimator = "MLR")
+fu.fit <- sem(fu.model, data = df, se = "robust", estimator = "MLR")
+
 # Fit main models
-
-nu.fit      <- sem(nu.model,      data = df, se = "robust", estimator = "MLR")
-pb.fit      <- sem(pb.model,      data = df, se = "robust", estimator = "MLR")
-omfr.fit    <- sem(omfr.model,    data = df, se = "robust", estimator = "MLR")
-omrr.fit    <- sem(omrr.model,    data = df, se = "robust", estimator = "MLR")
-somfr_d.fit <- sem(somfr_d.model, data = df, se = "robust", estimator = "MLR")
-somfr_u.fit <- sem(somfr_u.model, data = df, se = "robust", estimator = "MLR")
-somrr_d.fit <- sem(somrr_d.model, data = df, se = "robust", estimator = "MLR")
-somrr_u.fit <- sem(somrr_u.model, data = df, se = "robust", estimator = "MLR")
-fu.fit      <- sem(fu.model,      data = df, se = "robust", estimator = "MLR")
-
+a1.fit <- sem(a1.model, data = df, se = "robust", estimator = "MLR")
+b1.fit <- sem(b1.model, data = df, se = "robust", estimator = "MLR")
+a2.fit <- sem(a2.model, data = df, se = "robust", estimator = "MLR")
+b2.fit <- sem(b2.model, data = df, se = "robust", estimator = "MLR")
+a3.fit <- sem(a3.model, data = df, se = "robust", estimator = "MLR")
+b3.fit <- sem(b3.model, data = df, se = "robust", estimator = "MLR")
 
 # Fit supplementary models
-
 s1.fit <- sem(s1.model, data = df, se = "robust", estimator = "MLR")
 s2.fit <- sem(s2.model, data = df, se = "robust", estimator = "MLR")
 s3.fit <- sem(s3.model, data = df, se = "robust", estimator = "MLR")
 s4.fit <- sem(s4.model, data = df, se = "robust", estimator = "MLR")
 s5.fit <- sem(s5.model, data = df, se = "robust", estimator = "MLR")
 s6.fit <- sem(s6.model, data = df, se = "robust", estimator = "MLR")
-s7.fit <- sem(s7.model, data = df, se = "robust", estimator = "MLR")
 
 
 # ----------------------------------
@@ -200,49 +196,53 @@ s7.fit <- sem(s7.model, data = df, se = "robust", estimator = "MLR")
 ### further analyses
 
 ### Create list of all models
-models <- list(fu.fit, 
-               pb.fit, 
-               omfr.fit, 
-               omrr.fit, 
-               somfr_d.fit, 
-               somrr_d.fit, 
+models <- list(fu.fit,
+               a1.fit, 
+               b1.fit, 
+               a2.fit, 
+               b2.fit, 
+               a3.fit, 
+               b3.fit, 
                s1.fit, 
                s2.fit, 
                s3.fit, 
                s4.fit, 
                s5.fit,   
                s6.fit, 
-               s7.fit, 
                nu.fit)
 
 ### Set names of models in list
-names(models) <- c("full", 
-                   "pb", 
-                   "omfr", 
-                   "omrr", 
-                   "somfr", 
-                   "somrr", 
-                   "s1", 
-                   "s2", 
-                   "s3", 
-                   "s4", 
-                   "s5", 
-                   "s6", 
-                   "s7", 
-                   "null")
+names(models) <- c("full",     #1
+                   "model-1a", #2
+                   "model-1b", #3
+                   "model-2a", #4
+                   "model-2b", #5
+                   "model-3a", #6
+                   "model-3b", #7
+                   "model-s1", #8
+                   "model-s2", #9
+                   "model-s3", #10
+                   "model-s4", #11
+                   "model-s5", #12
+                   "model-s6", #13
+                   "null")     #14
 
 ### Get AICs and other information
 aics <- as.data.frame(
   AICcmodavg::aictab(models, modnames = names(models), second.ord = T)
   )
 
+aics
+
 ### Now, identify models with essentially the same log-likelihood as a simpler 
 ### model and print warning if there are any
 frm(aics)
 
 
-### Full model, s1, s3, s5, and s7 are redundant --> exclude from list of models
-models_r <- models[-c( 1, 5, 11, 9, 13, 7)]
+### full, model-3a, model-s5, model-s3, model-s6, model-s1 are redundant --> 
+### exclude from list of models
+models_r <- models[-c( 1, 6, 12, 10, 13, 8)]
+
 
 ### Get AICs and other fit information for final model set
 aics <- as.data.frame(
@@ -253,44 +253,65 @@ aics
 
 
 ### Get CFI, SRMR, and RMSEA 
-fitmeasures(somrr_d.fit, fit.measures = c("CFI", "SRMR", "RMSEA"))
-fitmeasures(omrr.fit,    fit.measures = c("CFI", "SRMR", "RMSEA"))
-fitmeasures(fu.fit,      fit.measures = c("CFI", "SRMR", "RMSEA"))
-fitmeasures(omfr.fit,    fit.measures = c("CFI", "SRMR", "RMSEA"))
-fitmeasures(pb.fit,      fit.measures = c("CFI", "SRMR", "RMSEA"))
-fitmeasures(s6.fit,      fit.measures = c("CFI", "SRMR", "RMSEA"))
-fitmeasures(nu.fit,      fit.measures = c("CFI", "SRMR", "RMSEA"))
+fitmeasures(b3.fit, fit.measures = c("CFI", "SRMR", "RMSEA"))
+fitmeasures(b2.fit, fit.measures = c("CFI", "SRMR", "RMSEA"))
+fitmeasures(fu.fit, fit.measures = c("CFI", "SRMR", "RMSEA"))
+fitmeasures(a2.fit, fit.measures = c("CFI", "SRMR", "RMSEA"))
+fitmeasures(b1.fit, fit.measures = c("CFI", "SRMR", "RMSEA"))
+fitmeasures(a1.fit, fit.measures = c("CFI", "SRMR", "RMSEA"))
+fitmeasures(nu.fit, fit.measures = c("CFI", "SRMR", "RMSEA"))
 
 ### Get R squared
-inspect(somrr_d.fit, 'r2')
-inspect(omrr.fit,    'r2')
-inspect(fu.fit,      'r2')
-inspect(omfr.fit,    'r2')
-inspect(s6.fit,      'r2')
-inspect(pb.fit,      'r2')
-inspect(nu.fit,      'r2')
+inspect(b3.fit, 'r2')
+inspect(b2.fit, 'r2')
+inspect(fu.fit, 'r2')
+inspect(a2.fit, 'r2')
+inspect(b1.fit, 'r2')
+inspect(a1.fit, 'r2')
+inspect(nu.fit, 'r2')
 
 ### Likelihood ratio tests of nested models
-anova(fu.fit, somrr_d.fit)
-anova(fu.fit, omrr.fit)
-anova(fu.fit, omfr.fit)
+anova(fu.fit, b3.fit)
+anova(fu.fit, b2.fit)
+anova(fu.fit, a2.fit)
 
 
 ### Get parameters SOMRR model
-summary(somrr_d.fit, ci = T, fit.measures = T)
-summary(omrr.fit,    ci = T, fit.measures = T)
-summary(omfr.fit,    ci = T, fit.measures = T)
+summary(b3.fit, ci = T, fit.measures = T)
+summary(b2.fit, ci = T, fit.measures = T)
+summary(a2.fit, ci = T, fit.measures = T)
 
 
-### Get a4 for SOMRR model and significance test using RSA function
-r.fu  <- RSA(ls  ~ sa.s*ca.s, df) 
+# -------------------------
+# Quantify optimal margin 
+# -------------------------
 
-getPar(r.fu, model = "full")  # full
-getPar(r.fu, model = "SSQD")  # OMFR
-getPar(r.fu, model = "SRR")   # OMRR
-getPar(r.fu, model = "SRSQD") # SOMFR
-getPar(r.fu, model = "SRRR")  # SOMRR
+# In the following, we will calculate the "optimal" subjective age for 
+# certain chronological ages. 
 
+# 1.) Select chronological ages and put them in a data frame
+ca <- c(40,50,60,70,80,90) 
+ca <- data.frame(ca)
+
+# 2.) Standardised chronological ages to grandmean and pooled sd
+ca$ca.sd <- (ca$ca - grandmean)/pooledsd 
+
+# 3.) Extract PA1 parameters from model fit
+p10 <- b3.fit@ParTable$est[38] # p10
+p11 <- b3.fit@ParTable$est[37] # p11
+
+# 4.) Using PA1, calculate corresponding standardised subj. ages 
+# i.e. these values lay on the PA1 and at them, life satisfaction is highest
+ca$sa.sd <- ((ca$ca.sd - p10)/p11) 
+
+# 5.) Unstandard. subjective ages
+ca$sa <- grandmean + (ca$sa.sd*pooledsd) 
+
+# 6.) Calculate difference (i.e. optimal subj. age bias)
+ca$bi <- ca$ca-ca$sa 
+
+# 7.) Show results in data frame
+ca 
 
 
 # --------
@@ -313,7 +334,9 @@ plot(r.fu, model = "SRRR",
      axesStyles = list(LOC  = list(lty = "solid", lwd = 2, col = "black"),
                        LOIC = list(lty = "solid", lwd = 2, col = "black"),
                        PA1  = list(lty = "dotted", lwd = 2, col = "grey40")),
-     xlab = "Subjective age", ylab = "Chronlogical age", zlab ="Life satisfaction",
+     xlab = "Subjective age", 
+     ylab = "Chronlogical age", 
+     zlab ="Life satisfaction",
      cex.tickLabel = 2, cex.axesLabel = 2,
      rotation = list(x=-48, y=26, z=20),
      label.rotation=list(x=22, y=-51, z=92),
@@ -328,19 +351,9 @@ dev.off()
 
 # Figure 2B): Stackedbar plot of optimal subjective ages 
 
-### First do some data wrangling 
-
-ca <- c(40,50,60,70,80,90) # chronological ages 
-ca <- data.frame(ca) # make a data frame
-ca$ca.sd <- (ca$ca - grandmean)/pooledsd # Standardised chronological ages
-p10 <- somrr_d.fit@ParTable$est[38] # extract p10 from parameters
-p11 <- somrr_d.fit@ParTable$est[37] # extract p11 from parameters
-ca$sa.sd <- ((ca$ca.sd - p10)/p11) # calculate corresponsding stand. subj. ages 
-ca$sa <- grandmean + (ca$sa.sd*pooledsd) # unstandard. subjective ages
-ca$bi <- ca$ca-ca$sa # calculate difference (i.e. bias)
-ca <- melt(ca, id.vars = c("ca", "ca.sd", "sa.sd")) # re-format to long format
-ca$variable2 <- relevel(ca$variable, ref = "bi") # re-level variable
-
+### Put data in long format and re-level variable
+ca <- melt(ca, id.vars = c("ca", "ca.sd", "sa.sd")) 
+ca$variable2 <- relevel(ca$variable, ref = "bi") 
 
 ### Stacked bar plot
 

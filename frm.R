@@ -13,15 +13,15 @@
 frm <- function(aic.results){
   
   # define list with all sets of models which are nested in each other, respectively
-  nestinglist <- list(c("full", "somrr", "somfr", "omfr", "s7", "null"),
-                      c("full", "somrr", "omrr", "omfr", "s7", "null"),
-                      c("full", "s4", "pb", "null"), 
-                      c("full", "s5", "s1", "null"), 
-                      c("full", "s5", "pb", "null"), 
-                      c("full", "s6", "pb", "null"), 
-                      c("full", "s6", "s2", "null"), 
-                      c("full", "s3", "s1", "null"), 
-                      c("full", "s3", "s2", "null"))
+  nestinglist <- list(c("full", "model-3b", "model-3a", "model-2a", "model-s6", "null"),
+                      c("full", "model-3b", "model-2b", "model-2a", "model-s6", "null"),
+                      c("full", "model-s4", "model-1a", "null"), 
+                      c("full", "model-s5", "model-s1", "null"), 
+                      c("full", "model-s5", "model-1a", "null"), 
+                      c("full", "model-1b", "model-1a", "null"), 
+                      c("full", "model-1b", "model-s2", "null"), 
+                      c("full", "model-s3", "model-s1", "null"), 
+                      c("full", "model-s3", "model-s2", "null"))
   
   # create empty vector to be filled with names of models we might want to remove
   toremove <- c()
