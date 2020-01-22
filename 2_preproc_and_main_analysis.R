@@ -310,7 +310,9 @@ ca$sa.sd <- ((ca$ca.sd - p10)/p11)
 ca$sa <- grandmean + (ca$sa.sd*pooledsd) 
 
 # 6.) Calculate difference (i.e. optimal subj. age bias)
-ca$bi <- ca$ca-ca$sa 
+ca$bi   <- ca$ca-ca$sa 
+ca$bi.2 <- ca$sa-ca$ca # negative values indicate feeling younger
+ca$bi.p <- (ca$sa-ca$ca)/ca$ca # proportinal values (divided by age)
 
 # 7.) Show results in data frame
 ca 
