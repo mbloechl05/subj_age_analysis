@@ -12,8 +12,10 @@ library(psych)
 library(ggplot2)
 library(car) # for vif()
 library(reshape)
+library(aplpack) # for compute bagplot
 
 source("analysis/subj_age_analysis/frm.R")
+source("analysis/subj_age_analysis/rsa_plot.R")
 
 # load data  
 df.raw  <- read.table("data/wave_2_core_data_v4.tab", sep = "\t", header = T)
@@ -282,7 +284,7 @@ anova(fu.fit, a2.fit)
 summary(b3.fit, ci = T, fit.measures = T)
 summary(b2.fit, ci = T, fit.measures = T)
 summary(a2.fit, ci = T, fit.measures = T)
-
+summary(fu.fit, ci = T, fit.measures = T)
 
 # -------------------------
 # Quantify optimal margin 
@@ -334,58 +336,59 @@ r.fu  <- RSA(ls  ~ sa.s*ca.s, df)
 png("analysis/results/3d_new.png", 
     width = 12, height = 12, units = 'in', res = 600)
 plot(r.fu, model = "SRRR",
-     axes = c("LOC", "LOIC", "PA1"),
+     axes = c("LOC", "PA1"),
      axesStyles = list(LOC  = list(lty = "solid", lwd = 2, col = "black"),
                        LOIC = list(lty = "solid", lwd = 2, col = "black"),
-                       PA1  = list(lty = "dotted", lwd = 2, col = "grey40")),
+                       PA1  = list(lty = "dotted", lwd = 2, col = "black")),
      xlab = "Subjective age", 
      ylab = "Chronlogical age", 
      zlab ="Life satisfaction",
      cex.tickLabel = 2, cex.axesLabel = 2,
-     rotation = list(x=-48, y=26, z=20),
-     label.rotation=list(x=22, y=-51, z=92),
-     points = list(show=T), hull = T, legend = T,
-     project = c("LOC", "LOIC", "PA1"), param = F,
+     rotation = list(x = -48, y = 26, z = 20),
+     label.rotation = list(x = 22, y = -51, z = 92),
+     points = list(show = F), hull = T, legend = T,
+     project = c("LOC", "PA1", "points"), param = F,
      pal = colorRampPalette(c("#24353f", "#385061", "#50748D", "#6b8a9f", 
                               "#7d98ab", "#9bafbe", "#bbc8d3", "#cad4dc", 
                               "#e8ecef", "#f0f2f4", "#ffffff"))(14))
 dev.off()
 
 
+# Figure 2B): Countour plot
+# note: please source rsa_plot before (contains modified contour plot function)
 
-# Figure 2B): Stackedbar plot of optimal subjective ages 
+SP <- RSA.ST(r.fu, model = "SRRR")
 
-### Put data in long format and re-level variable
-ca <- melt(ca, id.vars = c("ca", "ca.sd", "sa.sd")) 
-ca$variable2 <- relevel(ca$variable, ref = "bi") 
+p1 <- plot(r.fu, type = "contour", model = "SRRR",
+           axes = NA,
+           xlab = "Subjective age", ylab = "Chronological age", 
+           zlab ="Life satisfaction",
+           cex.main = 1.3, cex.tickLabel = 2, cex.axesLabel = 2,
+           points = list(show=F, jitter = 0.00, color = "black"), hull = F, 
+           legend = F,
+           pal = colorRampPalette(c("#24353f", "#385061", "#50748D", "#6b8a9f", 
+                                    "#7d98ab", "#9bafbe", "#bbc8d3", "#cad4dc", 
+                                    "#e8ecef", "#f0f2f4", "#ffffff"))(14))
 
-### Stacked bar plot
-
-png("analysis/results/3d_new.png", 
+png("analysis/results/contour.png", 
     width = 9, height = 9, units = 'in', res = 600)
-ggplot(data = ca, aes(x = ca, y = value, fill = variable2)) +
-  geom_bar(stat = "identity", colour = "black") +
-  scale_y_continuous("Subjective age", expand = c(0,0), limits = c(0,95), 
-                     breaks = c(0, 10, 20, 30, 40, 50, 60, 70, 80, 90)) +
-  scale_x_continuous("Chronological age", 
-                     breaks = c(40, 50, 60, 70, 80, 90)) +
-  scale_fill_manual(values = c('#f4f6f7','#50748E'), 
-                    name = NULL,
-                    breaks = c("sa", "bi"),
-                    labels=c("Optimal subj. age   ", 
-                             "Difference to chron. age")) + 
-  theme_classic(base_size = 16) +
-  theme(axis.title.x = element_text(colour = "black", size = 22, 
-                                    margin = margin(t=10, r=0, b=0, l=0)), 
-        axis.title.y = element_text(colour = "black", size = 22, 
-                       margin = margin(t=0, r=15, b=0, l=0)),         
-        axis.text.x  = element_text(colour = "black", size = 22, 
-                       margin = margin(t=15, r=0, b=0, l=0)), 
-        axis.text.y  = element_text(colour = "black", size = 22), 
-        panel.grid.major = element_blank(),
-        panel.grid.minor = element_blank(),
-        panel.background = element_blank(), 
-        legend.position = "top", 
-        legend.text = element_text(size = 22))
+p1 + 
+  geom_abline(aes(intercept = 0, slope = 1), size = 1.5, color="black") +
+  geom_abline(data=data.frame(SP[c("p10", "p11")]), 
+              aes_string(intercept="p10", slope = "p11"), 
+              linetype = "dashed", color="black", size = 1.5)+
+  geom_polygon(data = hull.loop, aes(x = x, y = y), inherit.aes = FALSE, 
+               colour = "black", fill = NA, 
+               alpha = 0.1, linetype = "dashed", size = 0.9) +
+  geom_polygon(data = hull.bag, aes(x = x, y = y), inherit.aes = FALSE, 
+               colour = "black", fill = NA, alpha = 0.1, size = 0.9) +
+  scale_x_continuous(expand=c(0,0)) + 
+  scale_y_continuous(expand=c(0,0)) +
+  theme(panel.border = element_rect(color = "black", fill = NA, size = 1),
+        axis.text = element_text(color = "black", size = 23), 
+        axis.title.y = element_text(color = "black", size = 23, 
+                                    margin = margin(t = 0, r = 30, b = 0, l = 0)), 
+        axis.title.x = element_text(color = "black", size = 23,
+                                    margin = margin(t = 30, r = 0, b = 0, l = 0)))
 dev.off()
 
