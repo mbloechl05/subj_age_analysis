@@ -3,6 +3,7 @@
 # "Psychological benefits of subjective age bias" 
 # ==============================================================
 
+# Please note that script 1 and 2 have to be run before this one
 
 # -----------------------------------------------------
 # 1) Re-run analyses with full sample (pre-registered)
