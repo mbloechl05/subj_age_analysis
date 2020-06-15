@@ -301,13 +301,71 @@ aics
 
 
 # -------------------------------
-# 4) Explore gender differences
+# 4) Explore sex differences
 # -------------------------------
 
-# 4.1.) Model for males 
+# 4.1.) Fit models with and without equivalence constrains and compare
+# ----------------------------------------------------------------------
+
+# In the following, we take the best-fitting model (3.b) and fit this model model 
+# without constraints (i.e. for both sexes, parameters are estimated freely implicating 
+# sex differences), then  with constraints (i.e. for both sexes, parameters are constrained
+# to be equal, implicating no sex differences) and then compare both models. 
+
+# Model without constraints
+
+b3.model.uc <- "
+    ls ~ 1 + c(b1m,b1f)*sa.s + c(b2m,b2f)*ca.s + c(b3m,b3f)*sa.s2 + c(b4m,b4f)*sa.ca + c(b5m,b5f)*ca.s2
+         
+    # parameter constraints male
+    b3m   <  -0.000001
+    b5m   <  -0.000001
+    b4m^2 == 4*b3m*b5m
+    
+    # parameter constraints female:
+    b3f   <  -0.000001
+    b5f   <  -0.000001
+    b4f^2 == 4*b3f*b5f
+
+    # parameters male
+    X0m  := (b2m*b4m - 2*b1m*b5m) / (4*b3m*b5m - b4m^2)
+    Y0m  := (b1m*b4m - 2*b2m*b3m) / (4*b3m*b5m - b4m^2)
+    p11m := (b5m - b3m + sqrt(((b3m - b5m)^2) + (b4m^2))) / b4m
+    p10m := Y0m - p11m*X0m
+
+    # parameters female
+    X0f  := (b2f*b4f - 2*b1f*b5f) / (4*b3f*b5f - b4f^2)
+    Y0f  := (b1f*b4f - 2*b2f*b3f) / (4*b3f*b5f - b4f^2)
+    p11f := (b5f - b3f + sqrt(((b3f - b5f)^2) + (b4f^2))) / b4f
+    p10f := Y0f - p11f*X0f"
+
+fit.uc <- sem(b3.model.uc, data = df, group = "sex", se = "robust", estimator = "MLR")
+summary(fit.uc)
+
+
+# Model with constraints
+
+b3.model.c <- "
+    ls ~ 1 + c(b1,b1)*sa.s + c(b2,b2)*ca.s + c(b3,b3)*sa.s2 + c(b4,b4)*sa.ca + c(b5,b5)*ca.s2
+    
+    # parameter constraints (equal for males and females)
+    b3   <  -0.000001
+    b5   <  -0.000001
+    b4^2 == 4*b3*b5
+    "
+fit.c <- sem(b3.model.c, data = df, group = "sex", se = "robust", estimator = "MLR")
+summary(fit.c)
+
+
+# Model comparison#
+
+anova(fit.uc, fit.c)
+
+
+# 4.2.) Model for males 
 # -----------------------
 
-# 4.1.1) Prepare data
+# 4.2.1) Prepare data
 
 # Create male data set
 df.male <- subset(df.eligible, DhSex == 1)
@@ -352,52 +410,34 @@ hist(df.male$ca, xlim = c(30, 90),  main = "Men: chron. age")
 hist(df.male$sa, xlim = c(15, 100), main = "Men: subj. age")
 
 
-# 4.1.2.) Model fitting and comparison
+# 4.2.2) Quantify optimal margin
 
-# Refit models
-nu.fit <- sem(nu.model, data = df.male, se = "robust", estimator = "MLR")
-fu.fit <- sem(fu.model, data = df.male, se = "robust", estimator = "MLR")
-a1.fit <- sem(a1.model, data = df.male, se = "robust", estimator = "MLR")
-b1.fit <- sem(b1.model, data = df.male, se = "robust", estimator = "MLR")
-a2.fit <- sem(a2.model, data = df.male, se = "robust", estimator = "MLR")
-b2.fit <- sem(b2.model, data = df.male, se = "robust", estimator = "MLR")
-a3.fit <- sem(a3.model, data = df.male, se = "robust", estimator = "MLR")
-b3.fit <- sem(b3.model, data = df.male, se = "robust", estimator = "MLR")
-s1.fit <- sem(s1.model, data = df.male, se = "robust", estimator = "MLR")
-s2.fit <- sem(s2.model, data = df.male, se = "robust", estimator = "MLR")
-s3.fit <- sem(s3.model, data = df.male, se = "robust", estimator = "MLR")
-s4.fit <- sem(s4.model, data = df.male, se = "robust", estimator = "MLR")
-s5.fit <- sem(s5.model, data = df.male, se = "robust", estimator = "MLR")
-s6.fit <- sem(s6.model, data = df.male, se = "robust", estimator = "MLR")
-
-# Create list of all models
-models <- list(fu.fit, a1.fit, b1.fit, a2.fit, b2.fit, a3.fit, b3.fit, 
-               s1.fit, s2.fit, s3.fit, s4.fit, s5.fit, s6.fit, nu.fit)
-
-# Set names of models in list
-names(models) <- c("full", "model-1a", "model-1b", "model-2a", "model-2b", 
-                   "model-3a", "model-3b", "model-s1", "model-s2", "model-s3", 
-                   "model-s4", "model-s5", "model-s6", "null")
-
-# Get AICs and other information
-aics.male.1 <- as.data.frame(AICcmodavg::aictab(models, modnames = names(models), second.ord = F))
-aics.male.1
-
-# Identify models with essentially the same log-likelihood as a simpler model
-frm(aics.male.1) # full, model-s3, model-s5, model-s6, model-s1 (model-2b, model-3a not excluded)
-models.r.male <- models[-c( 1, 10, 12, 13, 8)] # Exlude redundant models: 
-
-# Get AICs and other fit information for final model set
-aics.male.2 <- as.data.frame(AICcmodavg::aictab(models.r.male, 
-                                                modnames = names(models.r.male), second.ord = F))
-aics.male.2 
-
-
-# 4.1.3) Inspect parameters and plot model
-
-# Inspect best fitting model
+# Fit model
 b3.fit.male <- sem(b3.model, data = df.male, se = "robust", estimator = "MLR")
 summary(b3.fit.male, ci = T, fit.measures = T)
+
+# Prepare data
+ca.male <- c(40,50,60,70,80,90) # Select chronological ages and put them in a data frame
+ca.male <- data.frame(ca.male)
+
+ca.male$ca.sd <- (ca.male$ca - grandmean)/pooledsd # Standardised chron. age
+
+# Extract PA1 parameters from model fit
+p10 <- b3.fit.male@ParTable$est[38] # p10 --> 38
+p11 <- b3.fit.male@ParTable$est[37] # p11 --> 37
+
+# Run calculations 
+ca.male$sa.sd <- ((ca.male$ca.sd - p10)/p11) # Using PA1, calculate corresponding standardised subj. ages 
+ca.male$sa    <- grandmean + (ca.male$sa.sd*pooledsd) # Unstandard. subjective ages
+ca.male$bi    <- ca.male$ca-ca.male$sa # Calculate difference (i.e. optimal subj. age bias)
+ca.male$bi.2  <- ca.male$sa-ca.male$ca # negative values indicate feeling younger
+ca.male$bi.p  <- (ca.male$sa-ca.male$ca)/ca.male$ca # proportinal values (divided by age)
+
+# Show results
+ca.male
+
+
+# 4.2.3) Inspect parameters and plot model
 
 ### 3D RSA plot
 r.fu.male  <- RSA(ls  ~ sa.s*ca.s, df.male)
@@ -444,33 +484,10 @@ sum(resi < 0) # below
 sum(resi > 0) # above
 
 
-# 4.1.4.) Quantify optimal margin
-
-# Prepare data
-ca.male <- c(40,50,60,70,80,90) # Select chronological ages and put them in a data frame
-ca.male <- data.frame(ca.male)
-
-ca.male$ca.sd <- (ca.male$ca - grandmean)/pooledsd # Standardised chron. age
-
-# Extract PA1 parameters from model fit
-p10 <- b3.fit.male@ParTable$est[38] # p10
-p11 <- b3.fit.male@ParTable$est[37] # p11
-
-# Run calculations 
-ca.male$sa.sd <- ((ca.male$ca.sd - p10)/p11) # Using PA1, calculate corresponding standardised subj. ages 
-ca.male$sa    <- grandmean + (ca.male$sa.sd*pooledsd) # Unstandard. subjective ages
-ca.male$bi    <- ca.male$ca-ca.male$sa # Calculate difference (i.e. optimal subj. age bias)
-ca.male$bi.2  <- ca.male$sa-ca.male$ca # negative values indicate feeling younger
-ca.male$bi.p  <- (ca.male$sa-ca.male$ca)/ca.male$ca # proportinal values (divided by age)
-
-# Show results
-ca.male
-
-
-# 4.2.) Model for females
+# 4.3.) Model for females
 # -------------------------
 
-# 4.2.1) Prepare data
+# 4.3.1) Prepare data
 
 # Create male data set
 df.female <- subset(df.eligible, DhSex == 2)
@@ -515,54 +532,34 @@ hist(df.female$ca, xlim = c(30, 90), main = "Women: chron. age")
 hist(df.female$sa, xlim = c(15, 100), main = "Women: subj. age")
 
 
-# 4.2.2) Model fitting and comparison
+# 4.3.2) Quantify optimal margin
 
-# Refit models
-nu.fit <- sem(nu.model, data = df.female, se = "robust", estimator = "MLR")
-fu.fit <- sem(fu.model, data = df.female, se = "robust", estimator = "MLR")
-a1.fit <- sem(a1.model, data = df.female, se = "robust", estimator = "MLR")
-b1.fit <- sem(b1.model, data = df.female, se = "robust", estimator = "MLR")
-a2.fit <- sem(a2.model, data = df.female, se = "robust", estimator = "MLR")
-b2.fit <- sem(b2.model, data = df.female, se = "robust", estimator = "MLR")
-a3.fit <- sem(a3.model, data = df.female, se = "robust", estimator = "MLR")
-b3.fit <- sem(b3.model, data = df.female, se = "robust", estimator = "MLR")
-s1.fit <- sem(s1.model, data = df.female, se = "robust", estimator = "MLR")
-s2.fit <- sem(s2.model, data = df.female, se = "robust", estimator = "MLR")
-s3.fit <- sem(s3.model, data = df.female, se = "robust", estimator = "MLR")
-s4.fit <- sem(s4.model, data = df.female, se = "robust", estimator = "MLR")
-s5.fit <- sem(s5.model, data = df.female, se = "robust", estimator = "MLR")
-s6.fit <- sem(s6.model, data = df.female, se = "robust", estimator = "MLR")
-
-# Create list of all models
-models <- list(fu.fit, a1.fit, b1.fit, a2.fit, b2.fit, a3.fit, b3.fit, 
-               s1.fit, s2.fit, s3.fit, s4.fit, s5.fit, s6.fit, nu.fit)
-
-# Set names of models in list
-names(models) <- c("full", "model-1a", "model-1b", "model-2a", "model-2b", 
-                   "model-3a", "model-3b", "model-s1", "model-s2", "model-s3", 
-                   "model-s4", "model-s5", "model-s6", "null")
-
-# Get AICs and other information
-aics.female.1 <- as.data.frame(AICcmodavg::aictab(models, modnames = names(models), second.ord = F))
-aics.female.1
-
-# Identify models with essentially the same log-likelihood as a simpler model
-frm(aics.female.1) # model-3b(!), full, model-s5, model-s1, model-s2, model-s6, model-s3
-models.r.female <- models[-c( 7, 1, 12, 8, 9, 13, 10)] # Exlude redundant models
-
-# Get AICs and other fit information for final model set
-aics.female.2 <- as.data.frame(AICcmodavg::aictab(models.r.female, 
-                                                  modnames = names(models.r.female), second.ord = F))
-aics.female.2 
-
-
-# 4.2.3) Inspect parameters and plot model
-
-# Inspect model
+# Fit model
 b3.fit.female <- sem(b3.model, data = df.female, se = "robust", estimator = "MLR") 
 summary(b3.fit.female, ci = T, fit.measures = T) 
-# STILL FITTING B3 HERE BECAUSE I HAVEN'T DEFINED P10 AND P11 IN MODEL 3A
-# BUT SHOULD HOPEFULLY BE SIMILAR VALUES
+
+# Prepare data
+ca <- c(40,50,60,70,80,90) # Select chronological ages and put them in a data frame
+ca.female <- data.frame(ca)
+
+ca.female$ca.sd <- (ca.female$ca - grandmean)/pooledsd # Standardised chron. age
+
+# Extract PA1 parameters from model fit
+p10 <- b3.fit.female@ParTable$est[38] # p10
+p11 <- b3.fit.female@ParTable$est[37] # p11
+
+# Run calculations 
+ca.female$sa.sd <- ((ca.female$ca.sd - p10)/p11) # Using PA1, calculate corresponding standardised subj. ages 
+ca.female$sa    <- grandmean + (ca.female$sa.sd*pooledsd) # Unstandard. subjective ages
+ca.female$bi    <- ca.female$ca-ca.female$sa # Calculate difference (i.e. optimal subj. age bias)
+ca.female$bi.2  <- ca.female$sa-ca.female$ca # negative values indicate feeling younger
+ca.female$bi.p  <- (ca.female$sa-ca.female$ca)/ca.female$ca # proportinal values (divided by age)
+
+# Show results
+ca.female
+
+
+# 4.3.3) Inspect parameters and plot model
 
 ### 3D RSA plot
 r.fu.female  <- RSA(ls  ~ sa.s*ca.s, df.female)
@@ -607,17 +604,42 @@ sum(resi < 0) # below
 sum(resi > 0) # above
 
 
-# 4.2.4) Quantify optimal margin
+
+
+
+
+
 
 # Prepare data
-ca.female <- c(40,50,60,70,80,90) # Select chronological ages and put them in a data frame
-ca.female <- data.frame(ca.female)
+ca <- c(40,50,60,70,80,90) # Select chronological ages and put them in a data frame
+ca.male <- data.frame(ca)
+
+ca.male$ca.sd <- (ca.male$ca - grandmean)/pooledsd # Standardised chron. age
+
+# Extract PA1 parameters from model fit
+p10 <- fit.uc@ParTable$est[64] # p10 --> 38
+p11 <- fit.uc@ParTable$est[63] # p11 --> 37
+
+# Run calculations 
+ca.male$sa.sd <- ((ca.male$ca.sd - p10)/p11) # Using PA1, calculate corresponding standardised subj. ages 
+ca.male$sa    <- grandmean + (ca.male$sa.sd*pooledsd) # Unstandard. subjective ages
+ca.male$bi    <- ca.male$ca-ca.male$sa # Calculate difference (i.e. optimal subj. age bias)
+ca.male$bi.2  <- ca.male$sa-ca.male$ca # negative values indicate feeling younger
+ca.male$bi.p  <- (ca.male$sa-ca.male$ca)/ca.male$ca # proportinal values (divided by age)
+
+# Show results
+ca.male
+
+
+# Prepare data
+ca <- c(40,50,60,70,80,90) # Select chronological ages and put them in a data frame
+ca.female <- data.frame(ca)
 
 ca.female$ca.sd <- (ca.female$ca - grandmean)/pooledsd # Standardised chron. age
 
 # Extract PA1 parameters from model fit
-p10 <- b3.fit.female@ParTable$est[38] # p10
-p11 <- b3.fit.female@ParTable$est[37] # p11
+p10 <- fit.uc@ParTable$est[68] # p10
+p11 <- fit.uc@ParTable$est[67] # p11
 
 # Run calculations 
 ca.female$sa.sd <- ((ca.female$ca.sd - p10)/p11) # Using PA1, calculate corresponding standardised subj. ages 
