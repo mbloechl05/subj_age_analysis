@@ -1,6 +1,6 @@
 # ===============================================================
-# Models for 
-# "Psychological benefits of subjective age bias" 
+# Subjective age bias and life satisfaction
+# Script 1: Definitions of response surface models
 # ==============================================================
 
 # This script contains code to define all polynomial regression models 

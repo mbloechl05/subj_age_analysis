@@ -1,9 +1,12 @@
 # ===============================================================
-# Supplementary analysis for 
-# "Psychological benefits of subjective age bias" 
+# Subjective age bias and life satisfaction
+# Script 3: Supplementary analyses
 # ==============================================================
 
-# Please note that script 1 and 2 have to be run before this one
+# This script contains code to run all additional or supplementary 
+# analayses. Script 1 and script 2 have to be run before running 
+# this script since they contain model definitions and data, which 
+# which are are called upon here. 
 
 # -----------------------------------------------------
 # 1) Re-run analyses with full sample (pre-registered)
@@ -372,8 +375,8 @@ ca.male <- data.frame(ca)
 ca.male$ca.sd <- (ca.male$ca - grandmean)/pooledsd # Standardised chron. age
 
 # Extract PA1 parameters from model fit
-p10 <- fit.uc@ParTable$est[64] # p10 --> 38
-p11 <- fit.uc@ParTable$est[63] # p11 --> 37
+p10 <- fit.uc@ParTable$est[64] # p10 
+p11 <- fit.uc@ParTable$est[63] # p11
 
 # Run calculations 
 ca.male$sa.sd <- ((ca.male$ca.sd - p10)/p11) # Using PA1, calculate corresponding standardised subj. ages 

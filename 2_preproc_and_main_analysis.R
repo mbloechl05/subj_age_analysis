@@ -1,7 +1,11 @@
 # ===============================================================
-# Preproc and main analysis for 
-# "Psychological benefits of subjective age bias" 
+# Subjective age bias and life satisfaction
+# Script 2: Preproc and main analysis 
 # ==============================================================
+
+# This script contains code to run the main analyses.  
+# Script 1 has to be run before running this script since script 1 
+# contains all model definitions, which are are called upon here. 
 
 # load packages 
 library(dplyr)
@@ -14,6 +18,7 @@ library(car) # for vif()
 library(reshape)
 library(aplpack) # for compute bagplot
 
+# source helper scripts
 source("analysis/subj_age_analysis/frm.R")
 source("analysis/subj_age_analysis/rsa_plot.R")
 
@@ -114,7 +119,6 @@ df$ca.s  <- (df$ca-grandmean)/pooledsd
 df$sa.s2 <- df$sa.s^2
 df$ca.s2 <- df$ca.s^2
 df$sa.ca <- df$sa.s*df$ca.s
-
 
 
 # -------------------------
